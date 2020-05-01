@@ -7,9 +7,18 @@ const TauParser = Parser.extend(require('./tau-plugin'));
 function getVariableType(node, scope) {
   let $Type = 'unknown';
 
+  if (node.type === 'Literal') {
+    if (typeof node.value === 'number') {
+      return 'number';
+    }
+    if (typeof node.value === 'string') {
+      return 'string';
+    }
+  }
+
   walk.simple(scope, {
     VariableDeclarator(n) {
-      if (n.id.name === node.name) {
+      if (n.id.name === node.name && $Type === 'unknown') {
         $Type = n.$Type;
       }
     },
@@ -27,10 +36,12 @@ try {
   walk.ancestor(ast, {
     ExpressionStatement(node, scope) {
       const { left, right } = node.expression;
-      const leftType = getVariableType(left, scope[0]);
-      const rightType = getVariableType(right, scope[0]);
+      const parentScope = scope[scope.length - 2];
 
-      if (left !== right) {
+      const leftType = getVariableType(left, parentScope);
+      const rightType = getVariableType(right, parentScope);
+      console.log('right', leftType, rightType);
+      if (leftType !== rightType) {
         errors.push({
           name: `Type ${leftType} is not ${rightType}`,
           start: node.start,
