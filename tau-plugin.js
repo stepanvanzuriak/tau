@@ -6,11 +6,7 @@ module.exports = function noisyReadToken(Parser) {
 
     finishNode(node, type) {
       if (type === 'VariableDeclarator') {
-        if (typeof node.init.value === 'number') {
-          node.$Type = 'number';
-        } else if (typeof node.init.value === 'string') {
-          node.$Type = 'string';
-        }
+        node.$Type = typeof node.init.value;
       }
 
       return super.finishNode(node, type);

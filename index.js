@@ -8,12 +8,7 @@ function getVariableType(node, scope) {
   let $Type = 'unknown';
 
   if (node.type === 'Literal') {
-    if (typeof node.value === 'number') {
-      return 'number';
-    }
-    if (typeof node.value === 'string') {
-      return 'string';
-    }
+    return typeof node.value;
   }
 
   walk.simple(scope, {
@@ -40,7 +35,7 @@ try {
 
       const leftType = getVariableType(left, parentScope);
       const rightType = getVariableType(right, parentScope);
-      console.log('right', leftType, rightType);
+
       if (leftType !== rightType) {
         errors.push({
           name: `Type ${leftType} is not ${rightType}`,
