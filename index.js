@@ -1,4 +1,3 @@
-const fs = require('fs');
 const walk = require('acorn-walk');
 const { Parser } = require('acorn');
 
@@ -22,31 +21,34 @@ function getVariableType(node, scope) {
   return $Type;
 }
 
-const errors = [];
+function TauValidator(ast) {
+  const errors = [];
+  try {
+    walk.ancestor(ast, {
+      ExpressionStatement(node, scope) {
+        const { left, right } = node.expression;
+        const parentScope = scope[scope.length - 2];
 
-try {
-  const data = fs.readFileSync('./test.tau.js', 'utf8');
-  const ast = TauParser.parse(data);
+        const leftType = getVariableType(left, parentScope);
+        const rightType = getVariableType(right, parentScope);
 
-  walk.ancestor(ast, {
-    ExpressionStatement(node, scope) {
-      const { left, right } = node.expression;
-      const parentScope = scope[scope.length - 2];
+        if (leftType !== rightType) {
+          errors.push({
+            name: `Type ${leftType} is not ${rightType}`,
+            start: node.start,
+            end: node.end,
+          });
+        }
+      },
+    });
+  } catch (err) {
+    console.error(err);
+  }
 
-      const leftType = getVariableType(left, parentScope);
-      const rightType = getVariableType(right, parentScope);
-
-      if (leftType !== rightType) {
-        errors.push({
-          name: `Type ${leftType} is not ${rightType}`,
-          start: node.start,
-          end: node.end,
-        });
-      }
-    },
-  });
-} catch (err) {
-  console.error(err);
+  return errors;
 }
 
-console.log(errors);
+module.exports = {
+  TauParser,
+  TauValidator,
+};
