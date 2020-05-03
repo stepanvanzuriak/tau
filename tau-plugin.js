@@ -1,20 +1,22 @@
-module.exports = function noisyReadToken(Parser) {
-  return class extends Parser {
-    readToken(code) {
-      super.readToken(code);
-    }
+const { getAtomType } = require('./utils');
 
+module.exports = function readToken(Parser) {
+  return class extends Parser {
     finishNode(node, type) {
       if (type === 'VariableDeclarator') {
-        node.$Type = typeof node.init.value;
+        node.$Type = getAtomType(node.init.value);
       }
 
       return super.finishNode(node, type);
     }
 
-    parseExprAtom(refShortHandDefaultPos) {
-      return super.parseExprAtom(refShortHandDefaultPos);
-    }
+    // readToken(code) {
+    //   super.readToken(code);
+    // }
+
+    // parseExprAtom(refShortHandDefaultPos) {
+    //   return super.parseExprAtom(refShortHandDefaultPos);
+    // }
 
     // updateContext(prevType) {
     //   //console.log('updateContext', prevType, this.type);

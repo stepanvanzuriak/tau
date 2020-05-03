@@ -1,24 +1,30 @@
 const walk = require('acorn-walk');
 const { Parser } = require('acorn');
+const { getAtomType } = require('./utils');
+const { UNKNOWN_TYPE } = require('./constants');
 
-const TauParser = Parser.extend(require('./tau-plugin'));
+const TauParserObject = Parser.extend(require('./tau-plugin'));
 
 function getVariableType(node, scope) {
-  let $Type = 'unknown';
+  let $Type;
 
   if (node.type === 'Literal') {
-    return typeof node.value;
+    return getAtomType(node.value);
   }
 
   walk.simple(scope, {
     VariableDeclarator(n) {
-      if (n.id.name === node.name && $Type === 'unknown') {
+      if (n.id.name === node.name && !$Type) {
         $Type = n.$Type;
       }
     },
   });
 
-  return $Type;
+  return $Type || UNKNOWN_TYPE;
+}
+
+function TauParser(data) {
+  return TauParserObject.parse(data, { locations: true });
 }
 
 function TauValidator(ast) {
@@ -32,11 +38,10 @@ function TauValidator(ast) {
         const leftType = getVariableType(left, parentScope);
         const rightType = getVariableType(right, parentScope);
 
-        if (leftType !== rightType) {
+        if (leftType !== rightType && leftType !== UNKNOWN_TYPE) {
           errors.push({
             name: `Type ${leftType} is not ${rightType}`,
-            start: node.start,
-            end: node.end,
+            loc: node.loc,
           });
         }
       },
