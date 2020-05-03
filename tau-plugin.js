@@ -1,7 +1,13 @@
+const acorn = require('acorn');
+
 const { getAtomType } = require('./utils');
 
-module.exports = function readToken(Parser) {
-  return class extends Parser {
+const tt = acorn.tokTypes;
+
+tt._type = new acorn.TokenType('type', { keyword: 'type' });
+
+module.exports = function plugin(Parser) {
+  class TauPlugin extends Parser {
     finishNode(node, type) {
       if (type === 'VariableDeclarator') {
         node.$Type = getAtomType(node.init.value);
@@ -10,28 +16,41 @@ module.exports = function readToken(Parser) {
       return super.finishNode(node, type);
     }
 
-    // readToken(code) {
-    //   super.readToken(code);
-    // }
+    parseTypeAnnotation() {
+      const node = this.startNode(this.lastTokStart, this.lastTokStartLoc);
 
-    // parseExprAtom(refShortHandDefaultPos) {
-    //   return super.parseExprAtom(refShortHandDefaultPos);
-    // }
+      node.$Type = this.parseIdent();
 
-    // updateContext(prevType) {
-    //   //console.log('updateContext', prevType, this.type);
+      return this.finishNode(node, 'TypeAnnotation');
+    }
 
-    //   return super.updateContext(prevType);
-    // }
+    parseTypeAliasDeclaration() {
+      const node = this.startNodeAt(this.lastTokStart, this.lastTokStartLoc);
+      node.alias = this.parseIdent();
 
-    // parseStatement(context, topLevel, exports) {
-    //   console.log("parseStatement", context, topLevel, exports)
-    //   super.parseStatement(context, topLevel, exports)
-    // }
+      this.expect(tt.eq);
+      node.annotation = this.parseTypeAnnotation();
 
-    // finishToken(type, val) {
-    //   console.log(type, val)
-    //   super.finishToken(type, val);
-    // }
-  };
+      this.semicolon();
+      return this.finishNode(node, 'TypeDefinition');
+    }
+
+    _parseType(node, expr) {
+      if (expr.name === tt._type.keyword) {
+        if (this.type === tt.name) {
+          return this.parseTypeAliasDeclaration();
+        }
+      }
+
+      return super.parseExpressionStatement(node, expr);
+    }
+
+    parseExpressionStatement(node, expr) {
+      return expr.type === 'Identifier'
+        ? this._parseType(node, expr)
+        : super.parseExpressionStatement(node, expr);
+    }
+  }
+
+  return TauPlugin;
 };

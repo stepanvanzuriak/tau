@@ -2,16 +2,62 @@ const fs = require('fs');
 const path = require('path');
 const { TauParser, TauValidator } = require('../index.js');
 
-const data = fs.readFileSync(
+const numberTestInput = fs.readFileSync(
   path.resolve(__dirname, './input/number.js'),
   'utf8',
 );
 
+const typeDefInput = fs.readFileSync(
+  path.resolve(__dirname, './input/type-def.js'),
+  'utf8',
+);
+
+const doubleTypeDefInput = fs.readFileSync(
+  path.resolve(__dirname, './input/double-type-def.js'),
+  'utf8',
+);
+
 test('Number test', () => {
-  expect(TauValidator(TauParser(data))).toMatchObject([
+  expect(TauValidator(TauParser(numberTestInput))).toMatchObject([
     {
       loc: { end: { column: 14, line: 7 }, start: { column: 0, line: 7 } },
       name: 'Type number is not string',
+    },
+  ]);
+});
+
+test('Type definition', () => {
+  expect(TauValidator(TauParser(typeDefInput))).toMatchObject([
+    {
+      loc: {
+        end: {
+          column: 10,
+          line: 2,
+        },
+        start: {
+          column: 4,
+          line: 2,
+        },
+      },
+      name: 'Type string is not number',
+    },
+  ]);
+});
+
+test('Double type definition error', () => {
+  expect(TauValidator(TauParser(doubleTypeDefInput))).toMatchObject([
+    {
+      loc: {
+        end: {
+          column: 16,
+          line: 2,
+        },
+        start: {
+          column: 0,
+          line: 2,
+        },
+      },
+      name: 'Double declaration number before and string here',
     },
   ]);
 });
