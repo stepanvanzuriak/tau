@@ -1,6 +1,6 @@
 const acorn = require('acorn');
 
-const { getAtomType } = require('./utils');
+const { getAtomType, isAtomType } = require('./utils');
 
 const tt = acorn.tokTypes;
 
@@ -20,6 +20,8 @@ module.exports = function plugin(Parser) {
       const node = this.startNode(this.lastTokStart, this.lastTokStartLoc);
 
       node.$Type = this.parseIdent();
+
+      node.isReferenceType = !isAtomType(node.$Type.name);
 
       return this.finishNode(node, 'TypeAnnotation');
     }

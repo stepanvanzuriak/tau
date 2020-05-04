@@ -1,6 +1,7 @@
 const walk = require('acorn-walk');
 const { getAtomType } = require('./utils');
 const { UNKNOWN_TYPE } = require('./constants');
+const { TypeDoubleDeclarationError } = require('./errors-formatter.js');
 
 function ignore() {}
 
@@ -37,29 +38,48 @@ function getVariableType(node, scope) {
   return $Type || UNKNOWN_TYPE;
 }
 
+function findDefinition(defs, node, typeAlias = false) {
+  let found;
+
+  if (!typeAlias) {
+    found = defs.filter((n) => n.alias.name === node.name);
+  } else {
+    found = defs.filter((n) => n.alias.name === typeAlias);
+  }
+
+  if (!found.length) {
+    return UNKNOWN_TYPE;
+  }
+
+  if (found.length > 1) {
+    throw TypeDoubleDeclarationError(
+      found[0].annotation.$Type.name,
+      found[1].annotation.$Type.name,
+      found[1].loc,
+    );
+  }
+
+  if (!found[0].annotation.isReferenceType) {
+    return found[0];
+  }
+
+  return findDefinition(defs, node, found[0].annotation.$Type.name);
+}
+
 function searchForTypeDefinition(node, scope) {
-  let result;
+  const typeDefs = [];
 
   walk.simple(
     scope,
     {
       TypeDefinition(n) {
-        if (n.alias.name === node.name) {
-          if (!result) {
-            result = n;
-          } else {
-            throw {
-              name: `Double declaration ${result.annotation.$Type.name} before and ${n.annotation.$Type.name} here`,
-              loc: n.loc,
-            };
-          }
-        }
+        typeDefs.push(n);
       },
     },
     visitor,
   );
 
-  return result;
+  return findDefinition(typeDefs, node);
 }
 
 function TauValidator(ast) {
@@ -76,7 +96,10 @@ function TauValidator(ast) {
 
         try {
           definition = searchForTypeDefinition(node.id, parentScope);
-          leftType = definition && definition.annotation.$Type.name;
+          leftType =
+            definition &&
+            definition.annotation &&
+            definition.annotation.$Type.name;
         } catch (error) {
           errors.push(error);
         }
