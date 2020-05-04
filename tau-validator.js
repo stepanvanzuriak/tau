@@ -22,7 +22,7 @@ function getVariableType(node, scope) {
     scope,
     {
       TypeDefinition(n) {
-        if (n.alias.name === node.id.name && !$Type) {
+        if (n.alias.name === node.name && !$Type) {
           $Type = n.annotation.$Type.name;
         }
       },
@@ -133,7 +133,8 @@ function TauValidator(ast) {
       },
       ExpressionStatement(node, scope) {
         const { left, right } = node.expression;
-        const parentScope = scope[0];
+
+        const parentScope = scope[scope.length - 2];
 
         const leftType = getVariableType(left, parentScope);
         const rightType = getVariableType(right, parentScope);
