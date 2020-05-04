@@ -13,9 +13,9 @@ function scope() {
     a = 67;
 
     function deeper() {
-      let c = true;
+      let a = true;
 
-      c = false;
+      a = false;
     }
   }
 }
