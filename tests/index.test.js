@@ -22,6 +22,11 @@ const globalTypeInput = fs.readFileSync(
   'utf8',
 );
 
+const functionScopeInput = fs.readFileSync(
+  path.resolve(__dirname, './input/function-scope.js'),
+  'utf8',
+);
+
 test('Number test', () => {
   expect(TauValidator(TauParser(numberTestInput))).toMatchObject([
     {
@@ -69,4 +74,8 @@ test('Double type definition error', () => {
 
 test('Type Reference', () => {
   expect(TauValidator(TauParser(globalTypeInput))).toMatchObject([]);
+});
+
+test('Function scope', () => {
+  expect(TauValidator(TauParser(functionScopeInput))).toMatchObject([]);
 });
