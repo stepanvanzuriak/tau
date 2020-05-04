@@ -17,6 +17,11 @@ const doubleTypeDefInput = fs.readFileSync(
   'utf8',
 );
 
+const globalTypeInput = fs.readFileSync(
+  path.resolve(__dirname, './input/global-type.js'),
+  'utf8',
+);
+
 test('Number test', () => {
   expect(TauValidator(TauParser(numberTestInput))).toMatchObject([
     {
@@ -60,4 +65,8 @@ test('Double type definition error', () => {
       name: 'Double declaration number before and string here',
     },
   ]);
+});
+
+test('Type Reference', () => {
+  expect(TauValidator(TauParser(globalTypeInput))).toMatchObject([]);
 });

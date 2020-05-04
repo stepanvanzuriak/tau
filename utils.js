@@ -10,6 +10,11 @@ function getAtomType(value) {
   return $Type;
 }
 
+function isAtomType(name) {
+  return ['number', 'string', 'symbol', 'boolean'].includes(name);
+}
+
 module.exports = {
   getAtomType,
+  isAtomType,
 };
