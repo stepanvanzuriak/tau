@@ -27,6 +27,11 @@ const functionScopeInput = fs.readFileSync(
   'utf8',
 );
 
+const functionScopeTypeDef = fs.readFileSync(
+  path.resolve(__dirname, './input/function-scope-type-def.js'),
+  'utf8',
+);
+
 test('Number test', () => {
   expect(TauValidator(TauParser(numberTestInput))).toMatchObject([
     {
@@ -78,4 +83,22 @@ test('Type Reference', () => {
 
 test('Function scope', () => {
   expect(TauValidator(TauParser(functionScopeInput))).toMatchObject([]);
+});
+
+test('Function scope type def', () => {
+  expect(TauValidator(TauParser(functionScopeTypeDef))).toMatchObject([
+    {
+      loc: {
+        end: {
+          column: 20,
+          line: 12,
+        },
+        start: {
+          column: 8,
+          line: 12,
+        },
+      },
+      name: 'Type number is not string',
+    },
+  ]);
 });
