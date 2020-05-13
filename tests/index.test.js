@@ -32,11 +32,21 @@ const functionScopeTypeDef = fs.readFileSync(
   'utf8',
 );
 
+const functionArguments = fs.readFileSync(
+  path.resolve(__dirname, './input/function-arguments.js'),
+  'utf8',
+);
+
+const functionResult = fs.readFileSync(
+  path.resolve(__dirname, './input/function-result.js'),
+  'utf8',
+);
+
 test('Number test', () => {
   expect(TauValidator(TauParser(numberTestInput))).toMatchObject([
     {
-      loc: { end: { column: 14, line: 7 }, start: { column: 0, line: 7 } },
-      name: 'Type number is not string',
+      loc: { end: { column: 14, line: 8 }, start: { column: 0, line: 8 } },
+      name: 'Type number is not match string',
     },
   ]);
 });
@@ -54,7 +64,7 @@ test('Type definition', () => {
           line: 2,
         },
       },
-      name: 'Type string is not number',
+      name: 'Type string is not match number',
     },
   ]);
 });
@@ -98,7 +108,43 @@ test('Function scope type def', () => {
           line: 12,
         },
       },
-      name: 'Type number is not string',
+      name: 'Type number is not match string',
+    },
+  ]);
+});
+
+test('Function arguments', () => {
+  expect(TauValidator(TauParser(functionArguments))).toMatchObject([
+    {
+      loc: {
+        end: {
+          column: 9,
+          line: 3,
+        },
+        start: {
+          column: 2,
+          line: 3,
+        },
+      },
+      name: 'Type string is not match number',
+    },
+  ]);
+});
+
+test('Function result', () => {
+  expect(TauValidator(TauParser(functionResult))).toMatchObject([
+    {
+      loc: {
+        end: {
+          column: 11,
+          line: 3,
+        },
+        start: {
+          column: 2,
+          line: 3,
+        },
+      },
+      name: 'Type number is expected, but string is returned',
     },
   ]);
 });

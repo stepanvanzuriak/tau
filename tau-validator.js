@@ -1,154 +1,176 @@
 const walk = require('acorn-walk');
-const { getAtomType } = require('./utils');
+
+const { getAtomType, TypeMap, isAtomType } = require('./utils');
 const { UNKNOWN_TYPE } = require('./constants');
-const { TypeDoubleDeclarationError } = require('./errors-formatter.js');
 
-function ignore() {}
+const {
+  TypeDoubleDeclarationError,
+  TypesNotMatch,
+  TypeRefNotFound,
+  TypeOfReturnWrong,
+} = require('./errors-formatter.js');
 
-const visitor = {
-  ...walk.base,
-  TypeDefinition: ignore,
-  TypeAnnotation: ignore,
-};
+function ExpressionStatementTypeSwitch(node, state) {
+  switch (node.type) {
+    case 'Identifier':
+      return state.TypeMap.get(node.name);
 
-function getVariableType(node, scope) {
-  let $Type;
+    case 'Literal':
+      return getAtomType(node.value).name;
 
-  if (node.type === 'Literal') {
-    return getAtomType(node.value);
+    default:
+      return UNKNOWN_TYPE;
   }
-
-  walk.simple(
-    scope,
-    {
-      TypeDefinition(n) {
-        if (n.alias.name === node.name && !$Type) {
-          $Type = n.annotation.$Type.name;
-        }
-      },
-      VariableDeclarator(n) {
-        if (n.id.name === node.name && !$Type) {
-          $Type = n.$Type;
-        }
-      },
-    },
-    visitor,
-  );
-
-  return $Type || UNKNOWN_TYPE;
 }
 
-function findDefinition(defs, node, typeAlias = false) {
-  let found;
-
-  if (!typeAlias) {
-    found = defs.filter((n) => n.alias.name === node.name);
+function typeToScope(name, type, node, state, errors) {
+  if (isAtomType(type)) {
+    state.TypeMap.set(name, type);
+  } else if (state.TypeMap.has(type)) {
+    state.TypeMap.set(name, state.TypeMap.get(type));
   } else {
-    found = defs.filter((n) => n.alias.name === typeAlias);
+    errors.push(TypeRefNotFound(type, node.loc));
   }
-
-  if (!found.length) {
-    return UNKNOWN_TYPE;
-  }
-
-  if (found.length > 1) {
-    throw TypeDoubleDeclarationError(
-      found[0].annotation.$Type.name,
-      found[1].annotation.$Type.name,
-      found[1].loc,
-    );
-  }
-
-  if (!found[0].annotation.isReferenceType) {
-    return found[0];
-  }
-
-  return findDefinition(defs, node, found[0].annotation.$Type.name);
-}
-
-function searchForTypeDefinition(node, scope) {
-  const typeDefs = [];
-
-  walk.simple(
-    scope,
-    {
-      TypeDefinition(n) {
-        typeDefs.push(n);
-      },
-    },
-    visitor,
-  );
-
-  return findDefinition(typeDefs, node);
 }
 
 function TauValidator(ast) {
   const errors = [];
 
-  walk.ancestor(
-    ast,
-    {
-      VariableDeclarator(node, scope) {
-        const parentScope = scope[0];
-        let definition;
-        let rightType;
-        let leftType;
+  walk.recursive(ast, [], {
+    BlockStatement(node, state, c) {
+      node.body.forEach((child) => {
+        c(child, state);
+      });
+    },
 
-        try {
-          definition = searchForTypeDefinition(node.id, parentScope);
-          leftType =
-            definition &&
-            definition.annotation &&
-            definition.annotation.$Type.name;
-        } catch (error) {
-          errors.push(error);
+    ReturnStatement(node, state) {
+      const definedReturnedType = state.TypeMap.get(state.currentFunction);
+      const realReturnType = ExpressionStatementTypeSwitch(
+        node.argument,
+        state,
+      );
+      if (definedReturnedType !== realReturnType) {
+        errors.push(
+          TypeOfReturnWrong(definedReturnedType, realReturnType, node.loc),
+        );
+      }
+    },
+
+    FunctionDeclaration(node, state, c) {
+      state.TypeMap.addScope();
+      if (state.TypeMap.has(node.id.name)) {
+        const type = state.TypeMap.get(node.id.name);
+        const typeArgs = type.arguments;
+        const untypedArgs = node.params;
+
+        // TODO: add error here
+        // if (typeArgs.length < untypedArgs) {}
+
+        typeArgs.forEach((arg, index) => {
+          const argType = arg.name;
+          const { name } = untypedArgs[index];
+
+          typeToScope(name, argType, node, state, errors);
+        });
+
+        if (type.result) {
+          typeToScope(node.id.name, type.result.name, node, state, errors);
         }
+      }
+      state.currentFunction = node.id.name;
+      c(node.body, state);
+    },
 
-        // when right value is literal
-        if (node.init.type === 'Literal') {
-          rightType = getAtomType(node.init.value);
+    // Visit function for TypeDefinition
+    // Example: type a = boolean;
+    TypeDefinition(node, state) {
+      const typeAlias = node.alias.name;
+      const { annotation } = node;
+
+      // TODO: Extend this
+      if (annotation.$Type.type !== 'FunctionType') {
+        const typeAnnotation = annotation.$Type.name;
+
+        if (state.TypeMap.hasScope(typeAlias)) {
+          errors.push(
+            TypeDoubleDeclarationError(
+              state.TypeMap.get(typeAlias),
+              typeAnnotation,
+              node.loc,
+            ),
+          );
+        } else if (!annotation.isReferenceType) {
+          state.TypeMap.set(typeAlias, typeAnnotation);
+        } else if (state.TypeMap.has(typeAnnotation)) {
+          state.TypeMap.set(typeAlias, state.TypeMap.get(typeAnnotation));
+        } else {
+          errors.push(TypeRefNotFound(typeAnnotation, node.loc));
         }
+      } else if (annotation.$Type.type === 'FunctionType') {
+        state.TypeMap.set(typeAlias, annotation.$Type);
+      }
+    },
 
-        // when right value not literal
-        if (node.init.type === 'Identifier') {
-          try {
-            const rightTypeDefinition = searchForTypeDefinition(
-              node.init,
-              parentScope,
-            );
-            rightType =
-              rightTypeDefinition && rightTypeDefinition.annotation.$Type.name;
-          } catch (error) {
-            errors.push(error);
+    // Visit function for ExpressionStatement
+    // Example: num1 = num2;
+    ExpressionStatement(node, state) {
+      // Left and right nodes: Node -> expression -> left / right
+      const { left, right } = node.expression;
+      const leftType = ExpressionStatementTypeSwitch(left, state);
+      const rightType = ExpressionStatementTypeSwitch(right, state);
+
+      if (leftType !== rightType) {
+        errors.push(TypesNotMatch(leftType, rightType, node.loc));
+      }
+    },
+
+    // Visit function for Variable declaration
+    // Example: let num1 = 12;
+    VariableDeclaration(node, state) {
+      // Type path: Node -> declarations -> $Type
+      // Type to variable name: Node -> declarations -> id -> name
+      for (let i = 0; i < node.declarations.length; i += 1) {
+        const dec = node.declarations[i];
+        // Check if type was already defined
+        if (state.TypeMap.hasScope(dec.id.name)) {
+          const type = state.TypeMap.get(dec.id.name);
+
+          if (dec.$Type) {
+            if (type !== dec.$Type.name) {
+              // type a = string;
+              // let a = 12; // <- Error here
+              errors.push(TypesNotMatch(type, dec.$Type.name, dec.loc));
+              break;
+            }
+          } else {
+            // When let a = c;
+            const initType = state.TypeMap.get(dec.init.name);
+
+            if (type !== initType) {
+              errors.push(TypesNotMatch(type, initType, dec.loc));
+              break;
+            }
           }
         }
 
-        // TODO: Only naming, fix for values
-        if (leftType !== rightType && rightType && leftType) {
-          errors.push({
-            name: `Type ${leftType} is not ${rightType}`,
-            loc: node.loc,
-          });
+        if (dec.$Type) {
+          state.TypeMap.set(dec.id.name, dec.$Type.name);
+        } else {
+          // Example: let b = c;
+          const initType = state.TypeMap.get(dec.init.name);
+
+          state.TypeMap.set(dec.id.name, initType);
         }
-      },
-      ExpressionStatement(node, scope) {
-        const { left, right } = node.expression;
-
-        const parentScope = scope[scope.length - 2];
-
-        const leftType = getVariableType(left, parentScope);
-        const rightType = getVariableType(right, parentScope);
-
-        if (leftType !== rightType && leftType !== UNKNOWN_TYPE) {
-          errors.push({
-            name: `Type ${leftType} is not ${rightType}`,
-            loc: node.loc,
-          });
-        }
-      },
+      }
     },
-    visitor,
-  );
+
+    Program(node, state, c) {
+      state.TypeMap = new TypeMap();
+      node.body.forEach((child) => {
+        c(child, state);
+      });
+    },
+  });
 
   return errors;
 }
