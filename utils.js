@@ -4,7 +4,12 @@ function getAtomType(value) {
   let $Type = UNKNOWN_TYPE;
 
   if (typeof value !== 'undefined' || value === null) {
-    $Type = { name: typeof value };
+    $Type = {
+      annotation: typeof value,
+      isAtom: true,
+      isRef: false,
+      type: 'AtomType',
+    };
   }
 
   return $Type;
