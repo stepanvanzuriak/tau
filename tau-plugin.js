@@ -11,7 +11,7 @@ module.exports = function plugin(Parser) {
   class TauPlugin extends Parser {
     finishNode(node, type) {
       // Auto define type for variables
-      // Example: let a = 12 // <- node.$Type = number
+      // Example: let a = 12 // <- node.$Type = {name: number, isAtom: true}
       if (type === 'VariableDeclarator' && node.init.type === 'Literal') {
         node.$Type = getAtomType(node.init.value);
       }
@@ -19,9 +19,27 @@ module.exports = function plugin(Parser) {
       return super.finishNode(node, type);
     }
 
+    _fromIdentToType() {
+      let result = {};
+      const ident = this.parseIdent();
+
+      const isAtom = isAtomType(ident.name);
+
+      if (isAtom) {
+        result = { annotation: ident.name, type: 'AtomType' };
+      } else {
+        result = { annotation: ident.name, type: 'ReferenceType' };
+      }
+
+      result.isAtom = isAtom;
+      result.isRef = !isAtom;
+
+      return result;
+    }
+
     _parseFunctionType() {
       // 1: Define node
-      const node = this.startNode();
+      const result = { type: 'FunctionType' };
       const params = [];
       let withResult = true;
 
@@ -37,46 +55,46 @@ module.exports = function plugin(Parser) {
         }
 
         if (this.type === tt.name) {
-          params.push(this.parseIdent());
+          params.push(this._fromIdentToType());
         } else {
           this.nextToken();
         }
       }
 
       // 3: Define arguments as node property
-      node.arguments = params;
+      result.arguments = params;
 
       // 4: Define result type as node property
       if (withResult) {
-        node.result = this.parseIdent();
+        result.result = this._fromIdentToType();
       }
 
       // 5: Define end of type
       this.semicolon();
 
-      return this.finishNode(node, 'FunctionType');
+      return result;
     }
 
     _parseTypeAnnotation() {
       // 1: Define new node
-      const node = this.startNode(this.lastTokStart, this.lastTokStartLoc);
+      let result = {};
 
       if (this.type === tt.parenL) {
         // 2a: If type annotation is function
         // Example: type f = (number) => number;
         this.nextToken();
-        node.$Type = this._parseFunctionType();
+        result = this._parseFunctionType();
 
-        node.isReferenceType = false;
+        result.isRef = false;
+        result.isAtom = false;
       } else {
         // 2b: If type annotation is just type name
         // Example: type a = number;
-        node.$Type = this.parseIdent();
 
-        node.isReferenceType = !isAtomType(node.$Type.name);
+        result = this._fromIdentToType();
       }
 
-      return this.finishNode(node, 'TypeAnnotation');
+      return result;
     }
 
     _parseTypeAliasDeclaration() {
@@ -92,7 +110,7 @@ module.exports = function plugin(Parser) {
 
       // 4: Parse type annotation
       // Example: type a = number; // <- `number` is annotation
-      node.annotation = this._parseTypeAnnotation();
+      node.$Type = this._parseTypeAnnotation();
 
       // 5: Define end of type
       this.semicolon();
