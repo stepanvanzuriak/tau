@@ -1,7 +1,7 @@
 const walk = require('acorn-walk');
 
 const { getAtomType, TypeMap } = require('./utils');
-const { UNKNOWN_TYPE } = require('./constants');
+const { UNKNOWN_TYPE, TYPE_KIND, NODE_TYPE } = require('./constants');
 
 const {
   TypeDoubleDeclarationError,
@@ -12,10 +12,10 @@ const {
 
 function ExpressionStatementTypeSwitch(node, state) {
   switch (node.type) {
-    case 'Identifier':
+    case NODE_TYPE.IDENTIFIER:
       return state.TypeMap.get(node.name);
 
-    case 'Literal':
+    case NODE_TYPE.LITERAL:
       return getAtomType(node.value);
 
     default:
@@ -92,8 +92,8 @@ function TauValidator(ast) {
       const typeAnnotation = node.$Type.annotation;
 
       if (
-        node.$Type.type === 'AtomType' ||
-        node.$Type.type === 'ReferenceType'
+        node.$Type.type === TYPE_KIND.ATOM_TYPE ||
+        node.$Type.type === TYPE_KIND.REFERENCE_TYPE
       ) {
         if (state.TypeMap.hasScope(typeAlias)) {
           errors.push(
@@ -110,7 +110,7 @@ function TauValidator(ast) {
         } else {
           errors.push(TypeRefNotFound(typeAnnotation, node.loc));
         }
-      } else if (node.$Type.type === 'FunctionType') {
+      } else if (node.$Type.type === TYPE_KIND.FUNCTION_TYPE) {
         state.TypeMap.set(typeAlias, node.$Type);
       }
     },

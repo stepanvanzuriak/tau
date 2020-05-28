@@ -1,10 +1,8 @@
 const { UNKNOWN_TYPE } = require('./constants');
 
 function getAtomType(value) {
-  let $Type = UNKNOWN_TYPE;
-
   if (typeof value !== 'undefined' || value === null) {
-    $Type = {
+    return {
       annotation: typeof value,
       isAtom: true,
       isRef: false,
@@ -12,7 +10,7 @@ function getAtomType(value) {
     };
   }
 
-  return $Type;
+  return UNKNOWN_TYPE;
 }
 
 function isAtomType(name) {
