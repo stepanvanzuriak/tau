@@ -1,6 +1,7 @@
 const acorn = require('acorn');
 
 const { getAtomType, isAtomType } = require('./utils');
+const { TYPE_KIND, NODE_TYPE } = require('./constants');
 
 const tt = acorn.tokTypes;
 
@@ -12,7 +13,10 @@ module.exports = function plugin(Parser) {
     finishNode(node, type) {
       // Auto define type for variables
       // Example: let a = 12 // <- node.$Type = {name: number, isAtom: true}
-      if (type === 'VariableDeclarator' && node.init.type === 'Literal') {
+      if (
+        type === NODE_TYPE.VARIABLE_DECLARATOR &&
+        node.init.type === NODE_TYPE.LITERAL
+      ) {
         node.$Type = getAtomType(node.init.value);
       }
 
@@ -26,9 +30,9 @@ module.exports = function plugin(Parser) {
       const isAtom = isAtomType(ident.name);
 
       if (isAtom) {
-        result = { annotation: ident.name, type: 'AtomType' };
+        result = { annotation: ident.name, type: TYPE_KIND.ATOM_TYPE };
       } else {
-        result = { annotation: ident.name, type: 'ReferenceType' };
+        result = { annotation: ident.name, type: TYPE_KIND.REFERENCE_TYPE };
       }
 
       result.isAtom = isAtom;
@@ -39,7 +43,7 @@ module.exports = function plugin(Parser) {
 
     _parseFunctionType() {
       // 1: Define node
-      const result = { type: 'FunctionType' };
+      const result = { type: TYPE_KIND.FUNCTION_TYPE };
       const params = [];
       let withResult = true;
 
@@ -114,7 +118,7 @@ module.exports = function plugin(Parser) {
 
       // 5: Define end of type
       this.semicolon();
-      return this.finishNode(node, 'TypeDefinition');
+      return this.finishNode(node, NODE_TYPE.TYPE_DEFINITION);
     }
 
     _parseType(node, expr) {
@@ -127,7 +131,7 @@ module.exports = function plugin(Parser) {
     }
 
     parseExpressionStatement(node, expr) {
-      return expr.type === 'Identifier'
+      return expr.type === NODE_TYPE.IDENTIFIER
         ? this._parseType(node, expr)
         : super.parseExpressionStatement(node, expr);
     }
