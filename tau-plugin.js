@@ -1,6 +1,6 @@
 const acorn = require('acorn');
 
-const { getAtomType, isAtomType } = require('./utils');
+const { getAtomType, getObjectType, isAtomType } = require('./utils');
 const { TYPE_KIND, NODE_TYPE } = require('./constants');
 
 const tt = acorn.tokTypes;
@@ -13,11 +13,15 @@ module.exports = function plugin(Parser) {
     finishNode(node, type) {
       // Auto define type for variables
       // Example: let a = 12 // <- node.$Type = {name: number, isAtom: true}
-      if (
-        type === NODE_TYPE.VARIABLE_DECLARATOR &&
-        node.init.type === NODE_TYPE.LITERAL
-      ) {
-        node.$Type = getAtomType(node.init.value);
+
+      if (type === NODE_TYPE.VARIABLE_DECLARATOR) {
+        if (node.init.type === NODE_TYPE.LITERAL) {
+          node.$Type = getAtomType(node.init.value);
+        }
+
+        if (node.init.type === NODE_TYPE.OBJECT_EXPRESSION) {
+          node.$Type = getObjectType(node.init);
+        }
       }
 
       return super.finishNode(node, type);

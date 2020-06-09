@@ -1,4 +1,4 @@
-const { UNKNOWN_TYPE } = require('./constants');
+const { UNKNOWN_TYPE, NODE_TYPE } = require('./constants');
 
 function getAtomType(value) {
   if (typeof value !== 'undefined' || value === null) {
@@ -15,6 +15,23 @@ function getAtomType(value) {
 
 function isAtomType(name) {
   return ['number', 'string', 'symbol', 'boolean'].includes(name);
+}
+
+function getObjectType(node) {
+  return {
+    annotation: node.properties.reduce((acc, prop) => {
+      if (prop.value.type === NODE_TYPE.LITERAL) {
+        acc[prop.key.name] = getAtomType(prop.value.value);
+      } else {
+        acc[prop.key.name] = UNKNOWN_TYPE;
+      }
+
+      return acc;
+    }, {}),
+    isAtom: false,
+    isRef: false,
+    type: 'ObjectType',
+  };
 }
 
 class TypeMap {
@@ -61,6 +78,7 @@ class TypeMap {
 
 module.exports = {
   getAtomType,
+  getObjectType,
   isAtomType,
   TypeMap,
 };
