@@ -18,13 +18,15 @@ function ExpressionStatementTypeSwitch(node, state) {
     case NODE_TYPE.LITERAL:
       return getAtomType(node.value);
 
+    case NODE_TYPE.MEMBER_EXPRESSION:
+      return state.TypeMap.get(node.object.name);
+
     default:
       return UNKNOWN_TYPE;
   }
 }
 
 function typeToScope(name, type, node, state, errors) {
-  // TODO: Switch to isAtom here
   if (type.isAtom) {
     state.TypeMap.set(name, type);
   } else if (type.isRef) {
@@ -123,7 +125,22 @@ function TauValidator(ast) {
       const leftType = ExpressionStatementTypeSwitch(left, state);
       const rightType = ExpressionStatementTypeSwitch(right, state);
 
-      if (leftType.annotation !== rightType.annotation) {
+      if (left.type === NODE_TYPE.MEMBER_EXPRESSION) {
+        // TODO: Object can include property a.l.g, only g in top level
+        if (
+          leftType.annotation[left.property.name].annotation !==
+          rightType.annotation
+        ) {
+          // TODO: Define new object error
+          errors.push(
+            TypesNotMatch(
+              leftType.annotation[left.property.name].annotation,
+              rightType.annotation,
+              node.loc,
+            ),
+          );
+        }
+      } else if (leftType.annotation !== rightType.annotation) {
         errors.push(
           TypesNotMatch(leftType.annotation, rightType.annotation, node.loc),
         );
@@ -174,6 +191,8 @@ function TauValidator(ast) {
             const initType = state.TypeMap.get(dec.init.name);
 
             state.TypeMap.set(dec.id.name, initType);
+          } else {
+            state.TypeMap.set(dec.id.name, dec.$Type);
           }
         }
       }

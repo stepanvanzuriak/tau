@@ -42,6 +42,11 @@ const functionResult = fs.readFileSync(
   'utf8',
 );
 
+const objectTypeDef = fs.readFileSync(
+  path.resolve(__dirname, './input/object-type-def.js'),
+  'utf8',
+);
+
 test('Number test', () => {
   expect(TauValidator(TauParser(numberTestInput))).toMatchObject([
     {
@@ -145,6 +150,26 @@ test('Function result', () => {
         },
       },
       name: 'Type number is expected, but string is returned',
+    },
+  ]);
+});
+
+fs.writeFileSync('log.json', JSON.stringify(TauParser(objectTypeDef)));
+
+test('Object type', () => {
+  expect(TauValidator(TauParser(objectTypeDef))).toMatchObject([
+    {
+      loc: {
+        end: {
+          column: 13,
+          line: 11,
+        },
+        start: {
+          column: 0,
+          line: 11,
+        },
+      },
+      name: 'Type number is not match string',
     },
   ]);
 });

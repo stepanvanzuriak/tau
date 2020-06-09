@@ -11,6 +11,8 @@ const NODE_TYPE = {
   LITERAL: 'Literal',
   VARIABLE_DECLARATOR: 'VariableDeclarator',
   TYPE_DEFINITION: 'TypeDefinition',
+  OBJECT_EXPRESSION: 'ObjectExpression',
+  MEMBER_EXPRESSION: 'MemberExpression',
 };
 
 module.exports = {
