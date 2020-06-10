@@ -161,12 +161,12 @@ test('Object type', () => {
     {
       loc: {
         end: {
-          column: 13,
-          line: 11,
+          column: 17,
+          line: 13,
         },
         start: {
           column: 0,
-          line: 11,
+          line: 13,
         },
       },
       name: 'Type number is not match string',

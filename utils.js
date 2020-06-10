@@ -22,8 +22,8 @@ function getObjectType(node) {
     annotation: node.properties.reduce((acc, prop) => {
       if (prop.value.type === NODE_TYPE.LITERAL) {
         acc[prop.key.name] = getAtomType(prop.value.value);
-      } else {
-        acc[prop.key.name] = UNKNOWN_TYPE;
+      } else if (prop.value.type === NODE_TYPE.OBJECT_EXPRESSION) {
+        acc[prop.key.name] = getObjectType(prop.value);
       }
 
       return acc;

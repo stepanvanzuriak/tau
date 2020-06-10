@@ -19,7 +19,15 @@ function ExpressionStatementTypeSwitch(node, state) {
       return getAtomType(node.value);
 
     case NODE_TYPE.MEMBER_EXPRESSION:
-      return state.TypeMap.get(node.object.name);
+      if (node.object.type === NODE_TYPE.IDENTIFIER) {
+        return state.TypeMap.get(node.object.name);
+      }
+
+      if (node.object.type === NODE_TYPE.MEMBER_EXPRESSION) {
+        return ExpressionStatementTypeSwitch(node.object, state);
+      }
+
+      return UNKNOWN_TYPE;
 
     default:
       return UNKNOWN_TYPE;
@@ -127,18 +135,43 @@ function TauValidator(ast) {
 
       if (left.type === NODE_TYPE.MEMBER_EXPRESSION) {
         // TODO: Object can include property a.l.g, only g in top level
-        if (
-          leftType.annotation[left.property.name].annotation !==
-          rightType.annotation
-        ) {
-          // TODO: Define new object error
-          errors.push(
-            TypesNotMatch(
-              leftType.annotation[left.property.name].annotation,
-              rightType.annotation,
-              node.loc,
-            ),
-          );
+        // Object inside object
+
+        if (left.object.type === NODE_TYPE.IDENTIFIER) {
+          if (
+            leftType.annotation[left.property.name].annotation !==
+            rightType.annotation
+          ) {
+            // TODO: Define new object error
+            errors.push(
+              TypesNotMatch(
+                leftType.annotation[left.property.name].annotation,
+                rightType.annotation,
+                node.loc,
+              ),
+            );
+          }
+        } else if (left.object.type === NODE_TYPE.MEMBER_EXPRESSION) {
+          const pathChain = [left.property.name];
+          let cursor = left.object;
+
+          while (cursor.type === NODE_TYPE.MEMBER_EXPRESSION) {
+            pathChain.push(cursor.property.name);
+
+            cursor = cursor.object;
+          }
+
+          pathChain.reverse();
+
+          let target = leftType.annotation;
+
+          pathChain.forEach((path) => {
+            target = target[path].annotation;
+          });
+
+          if (target !== rightType.annotation) {
+            errors.push(TypesNotMatch(target, rightType.annotation, node.loc));
+          }
         }
       } else if (leftType.annotation !== rightType.annotation) {
         errors.push(
