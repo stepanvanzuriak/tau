@@ -7,5 +7,7 @@ const a = {
   },
 };
 
-// Error here
-a.c = 'sads';
+a.c = 56;
+a.k = false;
+
+a.g.l = 'asdasd';
