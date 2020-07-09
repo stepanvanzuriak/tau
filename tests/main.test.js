@@ -42,6 +42,11 @@ const functionResult = fs.readFileSync(
   'utf8',
 );
 
+const objectAutoType = fs.readFileSync(
+  path.resolve(__dirname, './input/object-auto-type.js'),
+  'utf8',
+);
+
 const objectTypeDef = fs.readFileSync(
   path.resolve(__dirname, './input/object-type-def.js'),
   'utf8',
@@ -154,10 +159,8 @@ test('Function result', () => {
   ]);
 });
 
-fs.writeFileSync('log.json', JSON.stringify(TauParser(objectTypeDef)));
-
-test('Object type', () => {
-  expect(TauValidator(TauParser(objectTypeDef))).toMatchObject([
+test('Object auto type', () => {
+  expect(TauValidator(TauParser(objectAutoType))).toMatchObject([
     {
       loc: {
         end: {
@@ -173,3 +176,23 @@ test('Object type', () => {
     },
   ]);
 });
+
+test('Object type def', () => {
+  expect(TauValidator(TauParser(objectTypeDef))).toMatchObject([
+    {
+      loc: {
+        end: {
+          column: 15,
+          line: 5,
+        },
+        start: {
+          column: 0,
+          line: 5,
+        },
+      },
+      name: 'Type number is not match string',
+    },
+  ]);
+});
+
+// fs.writeFileSync('log.json', JSON.stringify(TauParser(objectAutoType)));

@@ -4,6 +4,7 @@ const TYPE_KIND = {
   ATOM_TYPE: 'AtomType',
   REFERENCE_TYPE: 'ReferenceType',
   FUNCTION_TYPE: 'FunctionType',
+  OBJECT_TYPE: 'ObjectType',
 };
 
 const NODE_TYPE = {

@@ -47,7 +47,11 @@ module.exports = function plugin(Parser) {
 
     _parseFunctionType() {
       // 1: Define node
-      const result = { type: TYPE_KIND.FUNCTION_TYPE };
+      const result = {
+        type: TYPE_KIND.FUNCTION_TYPE,
+        isRef: false,
+        isAtom: false,
+      };
       const params = [];
       let withResult = true;
 
@@ -83,6 +87,54 @@ module.exports = function plugin(Parser) {
       return result;
     }
 
+    _parseObjectType() {
+      // 1: Define node
+      const result = {
+        type: TYPE_KIND.OBJECT_TYPE,
+        isRef: false,
+        isAtom: false,
+        annotation: {},
+      };
+
+      let isOpenParam = false;
+
+      const keys = [];
+      const types = [];
+
+      while (!this.eat(tt.braceR)) {
+        if (!isOpenParam) {
+          if (this.type === tt.name) {
+            const ident = this.parseIdent();
+
+            keys.push(ident.name);
+            isOpenParam = true;
+          } else {
+            this.nextToken();
+          }
+        } else {
+          this.expect(tt.colon);
+
+          if (this.type === tt.name) {
+            const type = this._fromIdentToType();
+            types.push(type);
+            isOpenParam = false;
+          } else {
+            this.nextToken();
+          }
+        }
+      }
+
+      if (keys.length === types.length) {
+        keys.forEach((key, index) => {
+          result.annotation[key] = types[index];
+        });
+      } else {
+        throw new Error('Wrong type formation');
+      }
+
+      return result;
+    }
+
     _parseTypeAnnotation() {
       // 1: Define new node
       let result = {};
@@ -92,11 +144,13 @@ module.exports = function plugin(Parser) {
         // Example: type f = (number) => number;
         this.nextToken();
         result = this._parseFunctionType();
-
-        result.isRef = false;
-        result.isAtom = false;
+      } else if (this.type === tt.braceL) {
+        // 2b: If type annotation is object
+        // Example: type a = {a: number};
+        this.nextToken();
+        result = this._parseObjectType();
       } else {
-        // 2b: If type annotation is just type name
+        // 2с: If type annotation is just type name
         // Example: type a = number;
 
         result = this._fromIdentToType();
