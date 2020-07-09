@@ -1,4 +1,4 @@
-const { UNKNOWN_TYPE, NODE_TYPE } = require('./constants');
+const { UNKNOWN_TYPE, NODE_TYPE, TYPE_KIND } = require('./constants');
 
 function getAtomType(value) {
   if (typeof value !== 'undefined' || value === null) {
@@ -6,7 +6,7 @@ function getAtomType(value) {
       annotation: typeof value,
       isAtom: true,
       isRef: false,
-      type: 'AtomType',
+      type: TYPE_KIND.ATOM_TYPE,
     };
   }
 
@@ -30,7 +30,7 @@ function getObjectType(node) {
     }, {}),
     isAtom: false,
     isRef: false,
-    type: 'ObjectType',
+    type: TYPE_KIND.OBJECT_TYPE,
   };
 }
 

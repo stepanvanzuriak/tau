@@ -19,7 +19,10 @@ function ExpressionStatementTypeSwitch(node, state) {
       return getAtomType(node.value);
 
     case NODE_TYPE.MEMBER_EXPRESSION:
-      if (node.object.type === NODE_TYPE.IDENTIFIER) {
+      if (
+        state.TypeMap.get(node.object.name) ||
+        node.object.type === NODE_TYPE.IDENTIFIER
+      ) {
         return state.TypeMap.get(node.object.name);
       }
 
@@ -120,7 +123,10 @@ function TauValidator(ast) {
         } else {
           errors.push(TypeRefNotFound(typeAnnotation, node.loc));
         }
-      } else if (node.$Type.type === TYPE_KIND.FUNCTION_TYPE) {
+      } else if (
+        node.$Type.type === TYPE_KIND.FUNCTION_TYPE ||
+        node.$Type.type === TYPE_KIND.OBJECT_TYPE
+      ) {
         state.TypeMap.set(typeAlias, node.$Type);
       }
     },
@@ -188,17 +194,22 @@ function TauValidator(ast) {
       for (let i = 0; i < node.declarations.length; i += 1) {
         const dec = node.declarations[i];
         // Check if type was already defined
+
         if (state.TypeMap.hasScope(dec.id.name)) {
-          const type = state.TypeMap.get(dec.id.name);
+          const stateType = state.TypeMap.get(dec.id.name);
 
           if (dec.$Type) {
             if (dec.$Type.isAtom) {
-              if (type.annotation !== dec.$Type.annotation) {
+              if (stateType.annotation !== dec.$Type.annotation) {
                 // type a = string;
                 // let a = 12; // <- Error here
 
                 errors.push(
-                  TypesNotMatch(type.annotation, dec.$Type.annotation, dec.loc),
+                  TypesNotMatch(
+                    stateType.annotation,
+                    dec.$Type.annotation,
+                    dec.loc,
+                  ),
                 );
                 break;
               }
@@ -206,17 +217,19 @@ function TauValidator(ast) {
               // When let a = c;
               const initType = state.TypeMap.get(dec.init.name);
 
-              if (type !== initType) {
+              if (stateType !== initType) {
                 errors.push(
-                  TypesNotMatch(type.annotation, initType.annotation, dec.loc),
+                  TypesNotMatch(
+                    stateType.annotation,
+                    initType.annotation,
+                    dec.loc,
+                  ),
                 );
                 break;
               }
             }
           }
-        }
-
-        if (dec.$Type) {
+        } else if (dec.$Type) {
           if (dec.$Type.isAtom) {
             state.TypeMap.set(dec.id.name, dec.$Type);
           } else if (dec.$Type.isRef) {

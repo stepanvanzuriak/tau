@@ -1,13 +1,5 @@
-const a = {
-  c: 12,
-  d: 'asd',
-  k: true,
-  g: {
-    l: 12,
-  },
-};
+type a = { c: string, d: number };
+const a = {};
 
-a.c = 56;
-a.k = false;
-
-a.g.l = 'asdasd';
+a.c = 'asdasd';
+a.d = 'asdasd';
