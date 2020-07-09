@@ -14,5 +14,7 @@ Experimental static type checker
     - [ ] Anonymous
     - [ ] Arrow
   - [ ] Class
-  - [ ] Object
+  
+  - [x] Object
+    - [ ] Test for objects with methods  
  
