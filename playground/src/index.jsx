@@ -1,8 +1,8 @@
 import React from 'react';
 import { render } from 'react-dom';
 
-render(<h1>Hello</h1>, document.getElementById('root'));
+import App from './App.jsx';
 
-// const core = require('tau-core');
+import './index.css';
 
-// console.log(core);
+render(<App />, document.getElementById('root'));
