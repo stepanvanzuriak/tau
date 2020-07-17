@@ -14,7 +14,8 @@
   "scripts": {
     "build": "webpack --mode production",
     "start": "webpack-dev-server --open --mode development",
-    "deploy": "npm run build && netlify deploy"
+    "deploy": "npm run build && netlify deploy",
+    "deploy-prod": "netlify deploy --prod"
   },
   "dependencies": {
     "monaco-editor": "0.20.0",
