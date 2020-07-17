@@ -1,4 +1,5 @@
 const PnpWebpackPlugin = require(`pnp-webpack-plugin`);
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const HtmlWebPackPlugin = require('html-webpack-plugin');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
@@ -49,11 +50,20 @@ module.exports = {
       },
     ],
   },
+  output: {
+    path: __dirname + '/dist',
+    publicPath: '/',
+    filename: 'static/bundle.js',
+  },
   plugins: [
+    new CleanWebpackPlugin(),
     new HtmlWebPackPlugin({
-      template: './src/index.html',
+      template: './public/index.html',
       filename: './index.html',
     }),
-    new MonacoWebpackPlugin(),
+    new MonacoWebpackPlugin({
+      publicPath: '/static',
+      languages: ['typescript', 'javascript'],
+    }),
   ],
 };
