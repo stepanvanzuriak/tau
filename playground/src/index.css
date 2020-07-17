@@ -1,0 +1,60 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 10px;
+  overflow: hidden;
+}
+
+#root,
+#editor {
+  width: 100%;
+  height: 100%;
+}
+
+.playground-header {
+  margin-bottom: 20px;
+}
+
+.bug-section {
+  border: 4px solid red;
+  padding: 5px;
+  font-family: monospace;
+}
+
+.bugs {
+  color: red;
+  font-size: 16px;
+}
+
+/* Style the button that is used to open and close the collapsible content */
+.collapsible {
+  color: #444;
+  cursor: pointer;
+  padding: 5px;
+  margin: 5px;
+  display: block;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+
+/* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+.active,
+.collapsible:hover {
+  background-color: #ccc;
+}
+
+/* Style the collapsible content. Note: hidden by default */
+.content {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+}
+
+.content-visible {
+  padding: 0 18px;
+
+  color: red;
+}

@@ -1,11 +1,11 @@
 {
   "name": "tau",
   "version": "0.1.0-alpha",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "jest"
-  },
+  "private": true,
+  "workspaces": [
+    "core",
+    "playground"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/stepanvanzuriak/tau.git"
@@ -16,24 +16,5 @@
   "bugs": {
     "url": "https://github.com/stepanvanzuriak/tau/issues"
   },
-  "homepage": "https://github.com/stepanvanzuriak/tau#readme",
-  "dependencies": {
-    "acorn": "^7.1.1",
-    "acorn-walk": "^7.1.1"
-  },
-  "devDependencies": {
-    "eslint-config-prettier": "^6.11.0",
-    "eslint": "^6.8.0",
-    "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-jest": "^23.8.2",
-    "husky": "^4.2.5",
-    "jest": "^25.5.3"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm test",
-      "pre-push": "npm test"
-    }
-  }
+  "homepage": "https://github.com/stepanvanzuriak/tau#readme"
 }

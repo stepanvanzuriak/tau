@@ -1,2 +1,10 @@
-/node_modules
-log.json
+/*/node_modules
+/*/dist
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+# Local Netlify folder
+.netlify
