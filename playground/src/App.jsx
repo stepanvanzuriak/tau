@@ -4,7 +4,7 @@ import * as monaco from 'monaco-editor';
 
 const App = () => {
   const [playgroundValue, setPlaygroundValue] = useState(
-    "function hello() {\n\tlet msg = 'World';\nreturn msg;\n}",
+    "let a = 12;\na = 'wrong!';",
   );
 
   const [editor, setEditor] = useState(null);
@@ -47,7 +47,7 @@ const App = () => {
     });
 
     const edt = monaco.editor.create(document.getElementById('editor'), {
-      value: "function hello() {\n\tlet msg = 'World';\n\treturn msg;\n}",
+      value: "let a = 12;\na = 'wrong!';",
       language: 'javascript',
     });
 
