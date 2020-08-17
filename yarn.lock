@@ -10020,6 +10020,7 @@ resolve@1.1.7:
     style-loader: ^1.2.1
     tau-core: "workspace:core"
     webpack: ^4.43.0
+    webpack-cli: ^3.3.12
     webpack-dev-server: ^3.11.0
   languageName: unknown
   linkType: soft
@@ -10682,7 +10683,7 @@ resolve@1.1.7:
   languageName: node
   linkType: hard
 
-"webpack-cli@npm:*":
+"webpack-cli@npm:*, webpack-cli@npm:^3.3.12":
   version: 3.3.12
   resolution: "webpack-cli@npm:3.3.12"
   dependencies:
