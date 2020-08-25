@@ -52,6 +52,11 @@ const objectTypeDef = fs.readFileSync(
   'utf8',
 );
 
+const arrowFuncTypeDef = fs.readFileSync(
+  path.resolve(__dirname, './input/arrow-func-type-def.js'),
+  'utf8',
+);
+
 test('Number test', () => {
   expect(TauValidator(TauParser(numberTestInput))).toMatchObject([
     {
@@ -195,4 +200,20 @@ test('Object type def', () => {
   ]);
 });
 
-// fs.writeFileSync('log.json', JSON.stringify(TauParser(objectAutoType)));
+test('Arrow function type def', () => {
+  expect(TauValidator(TauParser(arrowFuncTypeDef))).toMatchObject([
+    {
+      loc: {
+        end: {
+          column: 18,
+          line: 2,
+        },
+        start: {
+          column: 6,
+          line: 2,
+        },
+      },
+      name: 'Type number is expected, but string is returned',
+    },
+  ]);
+});

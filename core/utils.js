@@ -1,5 +1,14 @@
 const { UNKNOWN_TYPE, NODE_TYPE, TYPE_KIND } = require('./constants');
 
+function getRefType(value) {
+  return {
+    annotation: value,
+    type: TYPE_KIND.REFERENCE_TYPE,
+    isAtom: false,
+    isRef: true,
+  };
+}
+
 function getAtomType(value) {
   if (typeof value !== 'undefined' || value === null) {
     return {
@@ -31,6 +40,30 @@ function getObjectType(node) {
     isAtom: false,
     isRef: false,
     type: TYPE_KIND.OBJECT_TYPE,
+  };
+}
+
+function getArrowFunctionType(node) {
+  const annotation = {};
+
+  annotation.arguments = node.params.map(({ name }) => name);
+
+  switch (node.body.type) {
+    case NODE_TYPE.LITERAL: {
+      annotation.result = getAtomType(node.body.value);
+      break;
+    }
+    case NODE_TYPE.IDENTIFIER: {
+      annotation.result = getRefType(node.body.name);
+      break;
+    }
+  }
+
+  return {
+    annotation,
+    isRef: false,
+    isAtom: false,
+    type: TYPE_KIND.ARROW_FUNCTION_TYPE,
   };
 }
 
@@ -79,6 +112,8 @@ class TypeMap {
 module.exports = {
   getAtomType,
   getObjectType,
+  getRefType,
+  getArrowFunctionType,
   isAtomType,
   TypeMap,
 };

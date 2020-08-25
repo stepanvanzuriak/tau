@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { TauParser, TauValidator } from 'tau-core';
 import * as monaco from 'monaco-editor';
 
+import styles from './App.modules.css';
+
 const App = () => {
   const [playgroundValue, setPlaygroundValue] = useState(
     "let a = 12;\na = 'wrong!';",
@@ -9,6 +11,8 @@ const App = () => {
 
   const [editor, setEditor] = useState(null);
   const [showTrace, setShowTrace] = useState(false);
+  const [parserTree, setParserTree] = useState({});
+  const [showParserTree, setShowParserTree] = useState(false);
   const [bugs, setBugs] = useState({ simple: '', full: '' });
 
   const onValidate = useCallback(() => {
@@ -16,7 +20,9 @@ const App = () => {
       let warnings = [];
 
       try {
-        warnings = TauValidator(TauParser(playgroundValue));
+        const ast = TauParser(playgroundValue);
+        setParserTree(ast);
+        warnings = TauValidator(ast);
       } catch (e) {
         setBugs({ simple: e.toString(), full: e.stack });
       }
@@ -35,6 +41,10 @@ const App = () => {
       );
     }
   }, [editor, playgroundValue]);
+
+  const onShowParserTree = useCallback(() => {
+    setShowParserTree((prev) => !prev);
+  });
 
   const onShowMore = useCallback(() => {
     setShowTrace((prev) => !prev);
@@ -81,6 +91,12 @@ const App = () => {
         )}
         <br />
         <button onClick={onValidate}>Validate</button>
+
+        <button className={styles['ast-button']} onClick={onShowParserTree}>
+          {showParserTree ? <>Hide</> : <>Show</>} AST
+        </button>
+        <br />
+        {showParserTree && <code>{JSON.stringify(parserTree)}</code>}
       </div>
 
       <div id="editor"></div>
