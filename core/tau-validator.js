@@ -10,6 +10,16 @@ const {
   TypeOfReturnWrong,
 } = require('./errors-formatter.js');
 
+function typeToScope(name, type, node, state, errors) {
+  if (type.isAtom) {
+    state.TypeMap.set(name, type);
+  } else if (type.isRef) {
+    state.TypeMap.set(name, state.TypeMap.get(type));
+  } else {
+    errors.push(TypeRefNotFound(type, node.loc));
+  }
+}
+
 function ExpressionStatementTypeSwitch(node, state) {
   switch (node.type) {
     case NODE_TYPE.IDENTIFIER:
@@ -37,13 +47,20 @@ function ExpressionStatementTypeSwitch(node, state) {
   }
 }
 
-function typeToScope(name, type, node, state, errors) {
-  if (type.isAtom) {
-    state.TypeMap.set(name, type);
-  } else if (type.isRef) {
-    state.TypeMap.set(name, state.TypeMap.get(type));
-  } else {
-    errors.push(TypeRefNotFound(type, node.loc));
+function OtherTypeMatcher(dec, stateType, errors) {
+  if (dec.$Type.type === TYPE_KIND.ARROW_FUNCTION_TYPE) {
+    const result = dec.$Type.annotation.result;
+    if (result.isAtom) {
+      if (stateType.result.annotation !== result.annotation) {
+        errors.push(
+          TypeOfReturnWrong(
+            result.annotation,
+            stateType.result.annotation,
+            dec.loc,
+          ),
+        );
+      }
+    }
   }
 }
 
@@ -136,6 +153,7 @@ function TauValidator(ast) {
     ExpressionStatement(node, state) {
       // Left and right nodes: Node -> expression -> left / right
       const { left, right } = node.expression;
+
       const leftType = ExpressionStatementTypeSwitch(left, state);
       const rightType = ExpressionStatementTypeSwitch(right, state);
 
@@ -211,7 +229,6 @@ function TauValidator(ast) {
                     dec.loc,
                   ),
                 );
-                break;
               }
             } else if (dec.$Type.isRef) {
               // When let a = c;
@@ -225,8 +242,9 @@ function TauValidator(ast) {
                     dec.loc,
                   ),
                 );
-                break;
               }
+            } else {
+              OtherTypeMatcher(dec, stateType, errors);
             }
           }
         } else if (dec.$Type) {

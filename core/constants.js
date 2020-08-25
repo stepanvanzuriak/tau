@@ -5,6 +5,7 @@ const TYPE_KIND = {
   REFERENCE_TYPE: 'ReferenceType',
   FUNCTION_TYPE: 'FunctionType',
   OBJECT_TYPE: 'ObjectType',
+  ARROW_FUNCTION_TYPE: 'ArrowFunctionType',
 };
 
 const NODE_TYPE = {
@@ -14,6 +15,7 @@ const NODE_TYPE = {
   TYPE_DEFINITION: 'TypeDefinition',
   OBJECT_EXPRESSION: 'ObjectExpression',
   MEMBER_EXPRESSION: 'MemberExpression',
+  ARROW_FUNCTION_EXPRESSION: 'ArrowFunctionExpression',
 };
 
 module.exports = {

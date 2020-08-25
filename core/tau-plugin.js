@@ -1,6 +1,12 @@
 const acorn = require('acorn');
 
-const { getAtomType, getObjectType, isAtomType } = require('./utils');
+const {
+  getAtomType,
+  getObjectType,
+  isAtomType,
+  getRefType,
+  getArrowFunctionType,
+} = require('./utils');
 const { TYPE_KIND, NODE_TYPE } = require('./constants');
 
 const tt = acorn.tokTypes;
@@ -22,6 +28,10 @@ module.exports = function plugin(Parser) {
         if (node.init.type === NODE_TYPE.OBJECT_EXPRESSION) {
           node.$Type = getObjectType(node.init);
         }
+
+        if (node.init.type === NODE_TYPE.ARROW_FUNCTION_EXPRESSION) {
+          node.$Type = getArrowFunctionType(node.init);
+        }
       }
 
       return super.finishNode(node, type);
@@ -34,13 +44,15 @@ module.exports = function plugin(Parser) {
       const isAtom = isAtomType(ident.name);
 
       if (isAtom) {
-        result = { annotation: ident.name, type: TYPE_KIND.ATOM_TYPE };
+        result = {
+          annotation: ident.name,
+          isAtom: true,
+          isRef: false,
+          type: TYPE_KIND.ATOM_TYPE,
+        };
       } else {
-        result = { annotation: ident.name, type: TYPE_KIND.REFERENCE_TYPE };
+        result = getRefType(ident.name);
       }
-
-      result.isAtom = isAtom;
-      result.isRef = !isAtom;
 
       return result;
     }
