@@ -1,3 +1,9 @@
-.ast-button {
+.button-control {
   margin-left: 10px;
+}
+
+.ast {
+  max-width: 500px;
+  display: block;
+  margin-top: 10px;
 }

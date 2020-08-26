@@ -5,6 +5,9 @@ const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 module.exports = {
   devtool: 'cheap-module-source-map',
+  devServer: {
+    historyApiFallback: true,
+  },
   resolve: {
     plugins: [PnpWebpackPlugin],
   },

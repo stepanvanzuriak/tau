@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { TauParser, TauValidator } from 'tau-core';
 import * as monaco from 'monaco-editor';
+import queryString from 'query-string';
 
 import styles from './App.modules.css';
 
@@ -50,14 +51,29 @@ const App = () => {
     setShowTrace((prev) => !prev);
   }, []);
 
+  const onShareClick = useCallback(async () => {
+    await navigator.clipboard.writeText(
+      `${window.location.origin}?share=${btoa(playgroundValue)}`,
+    );
+    alert('Link copied to clickboard');
+  }, [playgroundValue]);
+
   useEffect(() => {
+    const parsed = queryString.parse(window.location.search);
+    let value = "let a = 12;\na = 'wrong!';";
+
     monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: true,
       noSyntaxValidation: true,
     });
 
+    if (parsed.share) {
+      value = atob(parsed.share);
+      setPlaygroundValue(value);
+    }
+
     const edt = monaco.editor.create(document.getElementById('editor'), {
-      value: "let a = 12;\na = 'wrong!';",
+      value,
       language: 'javascript',
     });
 
@@ -78,25 +94,40 @@ const App = () => {
             <h2>
               Looks like you found bug in Tau! Help us and submit it{' '}
               <a href="https://github.com/stepanvanzuriak/tau">here</a>
+              <br />
+              Please share this link:{' '}
+              <a
+                href={`${window.location.origin}?share=${btoa(
+                  playgroundValue,
+                )}`}
+              >
+                {`${window.location.origin}?share=${btoa(playgroundValue)}`}
+              </a>
             </h2>
             <code className="bugs">{bugs.simple}</code>
 
             <button type="button" className="collapsible" onClick={onShowMore}>
-              More info
+              {showTrace ? <>Less</> : <>More</>}
             </button>
             <div className={showTrace ? 'content-visible' : 'content'}>
               <pre>{bugs.full}</pre>
             </div>
           </div>
         )}
-        <br />
+
         <button onClick={onValidate}>Validate</button>
 
-        <button className={styles['ast-button']} onClick={onShowParserTree}>
+        <button className={styles['button-control']} onClick={onShowParserTree}>
           {showParserTree ? <>Hide</> : <>Show</>} AST
         </button>
-        <br />
-        {showParserTree && <code>{JSON.stringify(parserTree)}</code>}
+
+        <button className={styles['button-control']} onClick={onShareClick}>
+          Share
+        </button>
+
+        {showParserTree && (
+          <code className={styles.ast}>{JSON.stringify(parserTree)}</code>
+        )}
       </div>
 
       <div id="editor"></div>
