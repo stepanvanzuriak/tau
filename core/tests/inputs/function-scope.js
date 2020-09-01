@@ -21,3 +21,7 @@ function scope() {
 }
 
 let c = 89;
+
+// EXPECT
+
+[];
