@@ -1,4 +1,5 @@
 const walk = require('acorn-walk');
+const get = require('lodash.get');
 
 const { getAtomType, TypeMap } = require('./utils');
 const { UNKNOWN_TYPE, TYPE_KIND, NODE_TYPE } = require('./constants');
@@ -20,6 +21,22 @@ function typeToScope(name, type, node, state, errors) {
   }
 }
 
+function getRecursiveObjectPath(node, path = []) {
+  if (node.object) {
+    path = [...path, ...getRecursiveObjectPath(node.object, path)];
+  }
+
+  if (node.property) {
+    path = [...path, node.property.name];
+  }
+
+  if (node.name) {
+    path = [...path, node.name];
+  }
+
+  return path;
+}
+
 function ExpressionStatementTypeSwitch(node, state) {
   switch (node.type) {
     case NODE_TYPE.IDENTIFIER:
@@ -29,21 +46,45 @@ function ExpressionStatementTypeSwitch(node, state) {
       return getAtomType(node.value);
 
     case NODE_TYPE.MEMBER_EXPRESSION:
-      if (
-        state.TypeMap.get(node.object.name) ||
-        node.object.type === NODE_TYPE.IDENTIFIER
-      ) {
-        return state.TypeMap.get(node.object.name);
-      }
+      const [id, ...path] = getRecursiveObjectPath(node);
 
-      if (node.object.type === NODE_TYPE.MEMBER_EXPRESSION) {
-        return ExpressionStatementTypeSwitch(node.object, state);
+      if (state.TypeMap.get(id)) {
+        const result = get(
+          state.TypeMap.get(id),
+          path.reduce((acc, el) => [...acc, 'annotation', el], []),
+        );
+
+        if (result.isRef) {
+          return state.TypeMap.get(result.annotation);
+        }
+
+        return result;
       }
 
       return UNKNOWN_TYPE;
+
+    case NODE_TYPE.CALL_EXPRESSION:
+      return ExpressionStatementTypeSwitch(node.callee, state);
 
     default:
       return UNKNOWN_TYPE;
+  }
+}
+
+function annotationMatcher(left, right) {
+  if (right.type === TYPE_KIND.ARROW_FUNCTION_TYPE) {
+    // WARNING: Possible bug here when a = b.c ("a" and "b.c" are functions )
+    return {
+      match: left.annotation === right.annotation.result.annotation,
+      left: left.annotation,
+      right: right.annotation.result.annotation,
+    };
+  } else {
+    return {
+      match: left.annotation === right.annotation,
+      left: left.annotation,
+      right: right.annotation,
+    };
   }
 }
 
@@ -157,50 +198,14 @@ function TauValidator(ast) {
       const leftType = ExpressionStatementTypeSwitch(left, state);
       const rightType = ExpressionStatementTypeSwitch(right, state);
 
-      if (left.type === NODE_TYPE.MEMBER_EXPRESSION) {
-        // TODO: Object can include property a.l.g, only g in top level
-        // Object inside object
+      const {
+        left: leftAnnotation,
+        right: rightAnnotation,
+        match,
+      } = annotationMatcher(leftType, rightType);
 
-        if (left.object.type === NODE_TYPE.IDENTIFIER) {
-          if (
-            leftType.annotation[left.property.name].annotation !==
-            rightType.annotation
-          ) {
-            // TODO: Define new object error
-            errors.push(
-              TypesNotMatch(
-                leftType.annotation[left.property.name].annotation,
-                rightType.annotation,
-                node.loc,
-              ),
-            );
-          }
-        } else if (left.object.type === NODE_TYPE.MEMBER_EXPRESSION) {
-          const pathChain = [left.property.name];
-          let cursor = left.object;
-
-          while (cursor.type === NODE_TYPE.MEMBER_EXPRESSION) {
-            pathChain.push(cursor.property.name);
-
-            cursor = cursor.object;
-          }
-
-          pathChain.reverse();
-
-          let target = leftType.annotation;
-
-          pathChain.forEach((path) => {
-            target = target[path].annotation;
-          });
-
-          if (target !== rightType.annotation) {
-            errors.push(TypesNotMatch(target, rightType.annotation, node.loc));
-          }
-        }
-      } else if (leftType.annotation !== rightType.annotation) {
-        errors.push(
-          TypesNotMatch(leftType.annotation, rightType.annotation, node.loc),
-        );
+      if (!match) {
+        errors.push(TypesNotMatch(leftAnnotation, rightAnnotation, node.loc));
       }
     },
 

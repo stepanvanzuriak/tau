@@ -16,6 +16,7 @@ const NODE_TYPE = {
   OBJECT_EXPRESSION: 'ObjectExpression',
   MEMBER_EXPRESSION: 'MemberExpression',
   ARROW_FUNCTION_EXPRESSION: 'ArrowFunctionExpression',
+  CALL_EXPRESSION: 'CallExpression',
 };
 
 module.exports = {
