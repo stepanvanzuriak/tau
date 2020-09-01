@@ -6969,6 +6969,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"lodash.get@npm:^4.4.2":
+  version: 4.4.2
+  resolution: "lodash.get@npm:4.4.2"
+  checksum: 447e575e3caa5131ef44e5a0c135b1614f3c937d86b3be0568f9da7b0fd015010af3b6b4e41edf6e2698c9ce2dcc061ca71b31f274f799c991dceb018be16e4f
+  languageName: node
+  linkType: hard
+
 "lodash.sortby@npm:^4.7.0":
   version: 4.7.0
   resolution: "lodash.sortby@npm:4.7.0"
@@ -10027,6 +10034,7 @@ resolve@1.1.7:
     eslint-plugin-jest: ^23.8.2
     husky: ^4.2.5
     jest: ^25.5.3
+    lodash.get: ^4.4.2
   languageName: unknown
   linkType: soft
 

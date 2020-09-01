@@ -1,8 +1,8 @@
 const { UNKNOWN_TYPE, NODE_TYPE, TYPE_KIND } = require('./constants');
 
-function getRefType(value) {
+function getRefType(name) {
   return {
-    annotation: value,
+    annotation: name,
     type: TYPE_KIND.REFERENCE_TYPE,
     isAtom: false,
     isRef: true,
@@ -29,10 +29,23 @@ function isAtomType(name) {
 function getObjectType(node) {
   return {
     annotation: node.properties.reduce((acc, prop) => {
-      if (prop.value.type === NODE_TYPE.LITERAL) {
-        acc[prop.key.name] = getAtomType(prop.value.value);
-      } else if (prop.value.type === NODE_TYPE.OBJECT_EXPRESSION) {
-        acc[prop.key.name] = getObjectType(prop.value);
+      switch (prop.value.type) {
+        case NODE_TYPE.IDENTIFIER: {
+          acc[prop.key.name] = getRefType(prop.value.name);
+          break;
+        }
+        case NODE_TYPE.LITERAL: {
+          acc[prop.key.name] = getAtomType(prop.value.value);
+          break;
+        }
+        case NODE_TYPE.OBJECT_EXPRESSION: {
+          acc[prop.key.name] = getObjectType(prop.value);
+          break;
+        }
+        case NODE_TYPE.ARROW_FUNCTION_EXPRESSION: {
+          acc[prop.key.name] = getArrowFunctionType(prop.value);
+          break;
+        }
       }
 
       return acc;

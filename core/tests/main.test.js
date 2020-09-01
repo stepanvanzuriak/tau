@@ -57,6 +57,11 @@ const arrowFuncTypeDef = fs.readFileSync(
   'utf8',
 );
 
+const objectWithArrowMethod = fs.readFileSync(
+  path.resolve(__dirname, './input/object-with-arrow-method.js'),
+  'utf8',
+);
+
 test('Number test', () => {
   expect(TauValidator(TauParser(numberTestInput))).toMatchObject([
     {
@@ -214,6 +219,24 @@ test('Arrow function type def', () => {
         },
       },
       name: 'Type number is expected, but string is returned',
+    },
+  ]);
+});
+
+test('Object with arrow function method', () => {
+  expect(TauValidator(TauParser(objectWithArrowMethod))).toMatchObject([
+    {
+      loc: {
+        end: {
+          column: 10,
+          line: 9,
+        },
+        start: {
+          column: 0,
+          line: 9,
+        },
+      },
+      name: 'Type string is not match number',
     },
   ]);
 });

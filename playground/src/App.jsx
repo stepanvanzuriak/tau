@@ -58,6 +58,11 @@ const App = () => {
     alert('Link copied to clickboard');
   }, [playgroundValue]);
 
+  const onSaveAst = useCallback(async () => {
+    await navigator.clipboard.writeText(JSON.stringify(parserTree));
+    alert('Link copied to clickboard');
+  }, [parserTree]);
+
   useEffect(() => {
     const parsed = queryString.parse(window.location.search);
     let value = "let a = 12;\na = 'wrong!';";
@@ -126,7 +131,12 @@ const App = () => {
         </button>
 
         {showParserTree && (
-          <code className={styles.ast}>{JSON.stringify(parserTree)}</code>
+          <>
+            <pre className={styles.ast}>
+              {JSON.stringify(parserTree, null, 4)}
+            </pre>
+            <button onClick={onSaveAst}>Copy</button>
+          </>
         )}
       </div>
 
