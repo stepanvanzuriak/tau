@@ -19,4 +19,4 @@ Playground: https://tau-playground.netlify.app/
   - [ ] Class
 
   - [x] Object
-    - [ ] Test for objects with methods
+    - [x] Test for objects with methods

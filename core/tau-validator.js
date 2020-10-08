@@ -197,7 +197,7 @@ function TauValidator(ast) {
 
       const leftType = ExpressionStatementTypeSwitch(left, state);
       const rightType = ExpressionStatementTypeSwitch(right, state);
-
+      console.log('right', right);
       const {
         left: leftAnnotation,
         right: rightAnnotation,

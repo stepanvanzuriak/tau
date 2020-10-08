@@ -17,6 +17,8 @@ const NODE_TYPE = {
   MEMBER_EXPRESSION: 'MemberExpression',
   ARROW_FUNCTION_EXPRESSION: 'ArrowFunctionExpression',
   CALL_EXPRESSION: 'CallExpression',
+  FUNCTION_EXPRESSION: 'FunctionExpression',
+  BLOCK_STATEMENT: 'BlockStatement',
 };
 
 module.exports = {
