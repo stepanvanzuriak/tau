@@ -11,7 +11,6 @@ Playground: https://tau-playground.netlify.app/
 - [ ] Library typing mechanism
 - [ ] Node/Browser globals definition mechanism
 - [ ] Full typing for functions, class, object
-
   - [ ] Function
     - [x] Classic (named)
     - [x] Anonymous
