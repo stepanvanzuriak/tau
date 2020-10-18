@@ -14,8 +14,9 @@ Playground: https://tau-playground.netlify.app/
 
   - [ ] Function
     - [x] Classic (named)
-    - [ ] Anonymous
-    - [ ] Arrow
+    - [x] Anonymous
+    - [x] Arrow
+    - [ ] Tests
   - [ ] Class
 
   - [x] Object

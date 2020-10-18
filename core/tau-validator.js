@@ -1,109 +1,22 @@
 const walk = require('acorn-walk');
-const get = require('lodash.get');
 
 const { getAtomType, TypeMap } = require('./utils');
 const { UNKNOWN_TYPE, TYPE_KIND, NODE_TYPE } = require('./constants');
-
 const {
   TypeDoubleDeclarationError,
   TypesNotMatch,
   TypeRefNotFound,
   TypeOfReturnWrong,
+  ArgumentsNotMatch,
 } = require('./errors-formatter.js');
-
-function typeToScope(name, type, node, state, errors) {
-  if (type.isAtom) {
-    state.TypeMap.set(name, type);
-  } else if (type.isRef) {
-    state.TypeMap.set(name, state.TypeMap.get(type));
-  } else {
-    errors.push(TypeRefNotFound(type, node.loc));
-  }
-}
-
-function getRecursiveObjectPath(node, path = []) {
-  if (node.object) {
-    path = [...path, ...getRecursiveObjectPath(node.object, path)];
-  }
-
-  if (node.property) {
-    path = [...path, node.property.name];
-  }
-
-  if (node.name) {
-    path = [...path, node.name];
-  }
-
-  return path;
-}
-
-function ExpressionStatementTypeSwitch(node, state) {
-  switch (node.type) {
-    case NODE_TYPE.IDENTIFIER:
-      return state.TypeMap.get(node.name);
-
-    case NODE_TYPE.LITERAL:
-      return getAtomType(node.value);
-
-    case NODE_TYPE.MEMBER_EXPRESSION:
-      const [id, ...path] = getRecursiveObjectPath(node);
-
-      if (state.TypeMap.get(id)) {
-        const result = get(
-          state.TypeMap.get(id),
-          path.reduce((acc, el) => [...acc, 'annotation', el], []),
-        );
-
-        if (result.isRef) {
-          return state.TypeMap.get(result.annotation);
-        }
-
-        return result;
-      }
-
-      return UNKNOWN_TYPE;
-
-    case NODE_TYPE.CALL_EXPRESSION:
-      return ExpressionStatementTypeSwitch(node.callee, state);
-
-    default:
-      return UNKNOWN_TYPE;
-  }
-}
-
-function annotationMatcher(left, right) {
-  if (right.type === TYPE_KIND.ARROW_FUNCTION_TYPE) {
-    // WARNING: Possible bug here when a = b.c ("a" and "b.c" are functions )
-    return {
-      match: left.annotation === right.annotation.result.annotation,
-      left: left.annotation,
-      right: right.annotation.result.annotation,
-    };
-  } else {
-    return {
-      match: left.annotation === right.annotation,
-      left: left.annotation,
-      right: right.annotation,
-    };
-  }
-}
-
-function OtherTypeMatcher(dec, stateType, errors) {
-  if (dec.$Type.type === TYPE_KIND.ARROW_FUNCTION_TYPE) {
-    const result = dec.$Type.annotation.result;
-    if (result.isAtom) {
-      if (stateType.result.annotation !== result.annotation) {
-        errors.push(
-          TypeOfReturnWrong(
-            result.annotation,
-            stateType.result.annotation,
-            dec.loc,
-          ),
-        );
-      }
-    }
-  }
-}
+const {
+  typeToScope,
+  ExpressionStatementTypeSwitch,
+  OtherTypeMatcher,
+  annotationMatcher,
+  getRecursiveObjectPath,
+  AutoTypeSetter,
+} = require('./tau-validator-utils.js');
 
 function TauValidator(ast) {
   const errors = [];
@@ -129,6 +42,28 @@ function TauValidator(ast) {
             node.loc,
           ),
         );
+      }
+    },
+
+    CallExpression(node, state) {
+      const originFunctionType = state.TypeMap.get(node.callee.name);
+      const originFunctionArguments = originFunctionType.arguments;
+      const realArguments = node.arguments;
+
+      for (let i = 0; i < originFunctionArguments.length; i++) {
+        const originType = originFunctionArguments[i];
+        const realType = realArguments[i];
+
+        // TODO: ADD SWITCH
+        if (originType.type === TYPE_KIND.ATOM_TYPE) {
+          const valueType = typeof realType.value;
+
+          if (originType.annotation !== valueType) {
+            errors.push(
+              ArgumentsNotMatch(valueType, originType.annotation, node.loc),
+            );
+          }
+        }
       }
     },
 
@@ -197,7 +132,7 @@ function TauValidator(ast) {
 
       const leftType = ExpressionStatementTypeSwitch(left, state);
       const rightType = ExpressionStatementTypeSwitch(right, state);
-      console.log('right', right);
+
       const {
         left: leftAnnotation,
         right: rightAnnotation,
@@ -211,9 +146,10 @@ function TauValidator(ast) {
 
     // Visit function for Variable declaration
     // Example: let num1 = 12;
-    VariableDeclaration(node, state) {
+    VariableDeclaration(node, state, c) {
       // Type path: Node -> declarations -> $Type
       // Type to variable name: Node -> declarations -> id -> name
+
       for (let i = 0; i < node.declarations.length; i += 1) {
         const dec = node.declarations[i];
         // Check if type was already defined
@@ -221,6 +157,7 @@ function TauValidator(ast) {
         if (state.TypeMap.hasScope(dec.id.name)) {
           const stateType = state.TypeMap.get(dec.id.name);
 
+          // WARNING: LOOKS LIKE BUG BECAUSE NOT SET HERE (FULL IF)
           if (dec.$Type) {
             if (dec.$Type.isAtom) {
               if (stateType.annotation !== dec.$Type.annotation) {
@@ -263,6 +200,10 @@ function TauValidator(ast) {
           } else {
             state.TypeMap.set(dec.id.name, dec.$Type);
           }
+        } else {
+          c(dec.init, state);
+
+          AutoTypeSetter(dec, state);
         }
       }
     },
