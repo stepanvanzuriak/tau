@@ -11,12 +11,13 @@ Playground: https://tau-playground.netlify.app/
 - [ ] Library typing mechanism
 - [ ] Node/Browser globals definition mechanism
 - [ ] Full typing for functions, class, object
-
+  
   - [ ] Function
     - [x] Classic (named)
-    - [ ] Anonymous
-    - [ ] Arrow
+    - [x] Anonymous
+    - [x] Arrow
+    - [ ] Tests
   - [ ] Class
 
   - [x] Object
-    - [ ] Test for objects with methods
+    - [x] Test for objects with methods

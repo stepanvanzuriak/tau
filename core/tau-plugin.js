@@ -5,7 +5,7 @@ const {
   getObjectType,
   isAtomType,
   getRefType,
-  getArrowFunctionType,
+  getFunctionType,
 } = require('./utils');
 const { TYPE_KIND, NODE_TYPE } = require('./constants');
 
@@ -21,16 +21,20 @@ module.exports = function plugin(Parser) {
       // Example: let a = 12 // <- node.$Type = {name: number, isAtom: true}
 
       if (type === NODE_TYPE.VARIABLE_DECLARATOR) {
-        if (node.init.type === NODE_TYPE.LITERAL) {
-          node.$Type = getAtomType(node.init.value);
-        }
-
-        if (node.init.type === NODE_TYPE.OBJECT_EXPRESSION) {
-          node.$Type = getObjectType(node.init);
-        }
-
-        if (node.init.type === NODE_TYPE.ARROW_FUNCTION_EXPRESSION) {
-          node.$Type = getArrowFunctionType(node.init);
+        switch (node.init.type) {
+          case NODE_TYPE.LITERAL: {
+            node.$Type = getAtomType(node.init.value);
+            break;
+          }
+          case NODE_TYPE.OBJECT_EXPRESSION: {
+            node.$Type = getObjectType(node.init);
+            break;
+          }
+          case NODE_TYPE.FUNCTION_EXPRESSION:
+          case NODE_TYPE.ARROW_FUNCTION_EXPRESSION: {
+            node.$Type = getFunctionType(node.init);
+            break;
+          }
         }
       }
 

@@ -9,6 +9,24 @@ function getRefType(name) {
   };
 }
 
+function getResultFromBlock(node) {
+  const returnResult = node.body.find(
+    (node) => node.type === 'ReturnStatement',
+  );
+
+  if (returnResult) {
+    switch (returnResult.argument.type) {
+      case NODE_TYPE.LITERAL:
+        return getAtomType(returnResult.argument);
+
+      case NODE_TYPE.IDENTIFIER:
+        return getRefType(returnResult.argument);
+    }
+  }
+
+  return UNKNOWN_TYPE;
+}
+
 function getAtomType(value) {
   if (typeof value !== 'undefined' || value === null) {
     return {
@@ -56,7 +74,7 @@ function getObjectType(node) {
   };
 }
 
-function getArrowFunctionType(node) {
+function getFunctionType(node) {
   const annotation = {};
 
   annotation.arguments = node.params.map(({ name }) => name);
@@ -68,6 +86,10 @@ function getArrowFunctionType(node) {
     }
     case NODE_TYPE.IDENTIFIER: {
       annotation.result = getRefType(node.body.name);
+      break;
+    }
+    case NODE_TYPE.BLOCK_STATEMENT: {
+      annotation.result = getResultFromBlock(node.body);
       break;
     }
   }
@@ -126,7 +148,7 @@ module.exports = {
   getAtomType,
   getObjectType,
   getRefType,
-  getArrowFunctionType,
+  getFunctionType,
   isAtomType,
   TypeMap,
 };
