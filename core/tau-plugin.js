@@ -151,6 +151,29 @@ module.exports = function plugin(Parser) {
       return result;
     }
 
+    _parseHighOrderType(typeBase) {
+      const result = {
+        type: TYPE_KIND.HIGH_ORDER_TYPE,
+        isRef: false,
+        isAtom: false,
+        annotation: typeBase.annotation
+      }
+
+      const params = [];
+
+      while (!this.eat(tt.parenR)) {
+        if (this.type === tt.name) {
+          params.push(this._fromIdentToType());
+        } else {
+          this.nextToken();
+        }
+      }
+
+      result.arguments = params;
+
+      return result;
+    }
+
     _parseTypeAnnotation() {
       // 1: Define new node
       let result = {};
@@ -170,8 +193,15 @@ module.exports = function plugin(Parser) {
         // Example: type a = number;
 
         result = this._fromIdentToType();
+
+        // 2d: If type is High order type
+        // Example: type a = Array(number);
+        if (this.type === tt.parenL) {
+          result = this._parseHighOrderType(result)
+        }
       }
 
+     
       return result;
     }
 

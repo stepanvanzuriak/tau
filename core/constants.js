@@ -6,6 +6,7 @@ const TYPE_KIND = {
   FUNCTION_TYPE: 'FunctionType',
   OBJECT_TYPE: 'ObjectType',
   ARROW_FUNCTION_TYPE: 'ArrowFunctionType',
+  HIGH_ORDER_TYPE: "HighOrderType",
 };
 
 const NODE_TYPE = {
