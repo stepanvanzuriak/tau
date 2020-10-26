@@ -14,7 +14,6 @@ const {
   ExpressionStatementTypeSwitch,
   OtherTypeMatcher,
   annotationMatcher,
-  getRecursiveObjectPath,
   AutoTypeSetter,
 } = require('./tau-validator-utils.js');
 

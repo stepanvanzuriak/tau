@@ -1,8 +1,13 @@
-const { UNKNOWN_TYPE, NODE_TYPE, TYPE_KIND } = require('./constants');
+const {
+  UNKNOWN_TYPE,
+  NODE_TYPE,
+  TYPE_KIND,
+  DEFINED_HIGH_ORDER_TYPES,
+} = require('./constants');
 
-function getRefType(name) {
+function getRefType(annotation) {
   return {
-    annotation: name,
+    annotation,
     type: TYPE_KIND.REFERENCE_TYPE,
     isAtom: false,
     isRef: true,
@@ -27,14 +32,18 @@ function getResultFromBlock(node) {
   return UNKNOWN_TYPE;
 }
 
+function buildAtomType(annotation) {
+  return {
+    annotation,
+    isAtom: true,
+    isRef: false,
+    type: TYPE_KIND.ATOM_TYPE,
+  };
+}
+
 function getAtomType(value) {
-  if (typeof value !== 'undefined' || value === null) {
-    return {
-      annotation: typeof value,
-      isAtom: true,
-      isRef: false,
-      type: TYPE_KIND.ATOM_TYPE,
-    };
+  if (typeof value !== 'undefined' && value !== null) {
+    return buildAtomType(typeof value);
   }
 
   return UNKNOWN_TYPE;
@@ -42,6 +51,25 @@ function getAtomType(value) {
 
 function isAtomType(name) {
   return ['number', 'string', 'symbol', 'boolean'].includes(name);
+}
+
+function getArrayType(node) {
+  const types = new Set(node.elements.map((el) => typeof el.value));
+
+  const args = Array.from(types).map((type) =>
+    isAtomType(type) ? buildAtomType(type) : getRefType(type),
+  );
+
+  return {
+    arguments: args,
+    annotation:
+      args.length > 1
+        ? DEFINED_HIGH_ORDER_TYPES.MIXED_ARRAY
+        : DEFINED_HIGH_ORDER_TYPES.ARRAY,
+    type: TYPE_KIND.HIGH_ORDER_TYPE,
+    isRef: false,
+    isAtom: false,
+  };
 }
 
 function getObjectType(node) {
@@ -149,6 +177,7 @@ module.exports = {
   getObjectType,
   getRefType,
   getFunctionType,
+  getArrayType,
   isAtomType,
   TypeMap,
 };

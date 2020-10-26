@@ -6,6 +6,7 @@ const {
   isAtomType,
   getRefType,
   getFunctionType,
+  getArrayType,
 } = require('./utils');
 const { TYPE_KIND, NODE_TYPE } = require('./constants');
 
@@ -17,9 +18,9 @@ tt._type = new acorn.TokenType('type', { keyword: 'type' });
 module.exports = function plugin(Parser) {
   class TauPlugin extends Parser {
     finishNode(node, type) {
+
       // Auto define type for variables
       // Example: let a = 12 // <- node.$Type = {name: number, isAtom: true}
-
       if (type === NODE_TYPE.VARIABLE_DECLARATOR) {
         switch (node.init.type) {
           case NODE_TYPE.LITERAL: {
@@ -33,6 +34,10 @@ module.exports = function plugin(Parser) {
           case NODE_TYPE.FUNCTION_EXPRESSION:
           case NODE_TYPE.ARROW_FUNCTION_EXPRESSION: {
             node.$Type = getFunctionType(node.init);
+            break;
+          }
+          case NODE_TYPE.ARRAY_EXPRESSION: {
+            node.$Type = getArrayType(node.init);
             break;
           }
         }
@@ -151,6 +156,29 @@ module.exports = function plugin(Parser) {
       return result;
     }
 
+    _parseHighOrderType(typeBase) {
+      const result = {
+        type: TYPE_KIND.HIGH_ORDER_TYPE,
+        isRef: false,
+        isAtom: false,
+        annotation: typeBase.annotation
+      }
+
+      const params = [];
+
+      while (!this.eat(tt.parenR)) {
+        if (this.type === tt.name) {
+          params.push(this._fromIdentToType());
+        } else {
+          this.nextToken();
+        }
+      }
+
+      result.arguments = params;
+
+      return result;
+    }
+
     _parseTypeAnnotation() {
       // 1: Define new node
       let result = {};
@@ -170,8 +198,15 @@ module.exports = function plugin(Parser) {
         // Example: type a = number;
 
         result = this._fromIdentToType();
+
+        // 2d: If type is High order type
+        // Example: type a = Array(number);
+        if (this.type === tt.parenL) {
+          result = this._parseHighOrderType(result)
+        }
       }
 
+     
       return result;
     }
 
