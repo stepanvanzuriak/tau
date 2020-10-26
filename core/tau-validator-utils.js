@@ -1,7 +1,12 @@
 const get = require('lodash.get');
 
-const { getAtomType, TypeMap } = require('./utils');
-const { UNKNOWN_TYPE, TYPE_KIND, NODE_TYPE } = require('./constants');
+const { getAtomType, getArrayType } = require('./utils');
+const {
+  UNKNOWN_TYPE,
+  TYPE_KIND,
+  NODE_TYPE,
+  DEFINED_HIGH_ORDER_TYPES,
+} = require('./constants');
 const { TypeOfReturnWrong } = require('./errors-formatter');
 
 function typeToScope(name, type, node, state, errors) {
@@ -30,20 +35,41 @@ function getRecursiveObjectPath(node, path = []) {
   return path;
 }
 
+function annotationPrepare(node) {
+  switch (node.annotation) {
+    case DEFINED_HIGH_ORDER_TYPES.ARRAY:
+    case DEFINED_HIGH_ORDER_TYPES.MIXED_ARRAY:
+      return `${node.annotation}(${node.arguments
+        .map((arg) => arg.annotation)
+        .join(',')})`;
+
+    default:
+      return node.annotation;
+  }
+}
+
 function annotationMatcher(left, right) {
-  if (right.type === TYPE_KIND.ARROW_FUNCTION_TYPE) {
-    // WARNING: Possible bug here when a = b.c ("a" and "b.c" are functions )
-    return {
-      match: left.annotation === right.annotation.result.annotation,
-      left: left.annotation,
-      right: right.annotation.result.annotation,
-    };
-  } else {
-    return {
-      match: left.annotation === right.annotation,
-      left: left.annotation,
-      right: right.annotation,
-    };
+  switch (right.type) {
+    case TYPE_KIND.ARROW_FUNCTION_TYPE: {
+      const leftAnnotation = annotationPrepare(left);
+      const rightAnnotation = annotationPrepare(right.annotation.result);
+      return {
+        match: leftAnnotation === rightAnnotation,
+        left: leftAnnotation,
+        right: rightAnnotation,
+      };
+    }
+
+    default: {
+      const leftAnnotation = annotationPrepare(left);
+      const rightAnnotation = annotationPrepare(right);
+     
+      return {
+        match: leftAnnotation === rightAnnotation,
+        left: leftAnnotation,
+        right: rightAnnotation,
+      };
+    }
   }
 }
 
@@ -75,6 +101,9 @@ function ExpressionStatementTypeSwitch(node, state) {
 
     case NODE_TYPE.CALL_EXPRESSION:
       return ExpressionStatementTypeSwitch(node.callee, state);
+
+    case NODE_TYPE.ARRAY_EXPRESSION:
+      return getArrayType(node);
 
     default:
       return UNKNOWN_TYPE;

@@ -6,6 +6,7 @@ const {
   isAtomType,
   getRefType,
   getFunctionType,
+  getArrayType,
 } = require('./utils');
 const { TYPE_KIND, NODE_TYPE } = require('./constants');
 
@@ -17,9 +18,9 @@ tt._type = new acorn.TokenType('type', { keyword: 'type' });
 module.exports = function plugin(Parser) {
   class TauPlugin extends Parser {
     finishNode(node, type) {
+
       // Auto define type for variables
       // Example: let a = 12 // <- node.$Type = {name: number, isAtom: true}
-
       if (type === NODE_TYPE.VARIABLE_DECLARATOR) {
         switch (node.init.type) {
           case NODE_TYPE.LITERAL: {
@@ -33,6 +34,10 @@ module.exports = function plugin(Parser) {
           case NODE_TYPE.FUNCTION_EXPRESSION:
           case NODE_TYPE.ARROW_FUNCTION_EXPRESSION: {
             node.$Type = getFunctionType(node.init);
+            break;
+          }
+          case NODE_TYPE.ARRAY_EXPRESSION: {
+            node.$Type = getArrayType(node.init);
             break;
           }
         }

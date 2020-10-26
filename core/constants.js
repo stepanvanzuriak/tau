@@ -1,12 +1,18 @@
 const UNKNOWN_TYPE = 'unknown';
 
+
+const DEFINED_HIGH_ORDER_TYPES = {
+  ARRAY: "Array",
+  MIXED_ARRAY: "MixedArray"
+}
+
 const TYPE_KIND = {
   ATOM_TYPE: 'AtomType',
   REFERENCE_TYPE: 'ReferenceType',
   FUNCTION_TYPE: 'FunctionType',
   OBJECT_TYPE: 'ObjectType',
   ARROW_FUNCTION_TYPE: 'ArrowFunctionType',
-  HIGH_ORDER_TYPE: "HighOrderType",
+  HIGH_ORDER_TYPE: 'HighOrderType',
 };
 
 const NODE_TYPE = {
@@ -20,10 +26,12 @@ const NODE_TYPE = {
   CALL_EXPRESSION: 'CallExpression',
   FUNCTION_EXPRESSION: 'FunctionExpression',
   BLOCK_STATEMENT: 'BlockStatement',
+  ARRAY_EXPRESSION: 'ArrayExpression',
 };
 
 module.exports = {
   UNKNOWN_TYPE,
   TYPE_KIND,
   NODE_TYPE,
+  DEFINED_HIGH_ORDER_TYPES,
 };
