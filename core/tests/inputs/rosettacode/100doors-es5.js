@@ -1,0 +1,46 @@
+var doors = [];
+
+for (var i = 0; i < 100; i++) {
+  doors[i] = false;
+}
+
+for (var i = 1; i <= 100; i++) {
+  for (var i2 = i - 1; i2 < 100; i2 += i) {
+    doors[i2] = !doors[i2];
+  }
+}
+
+for (var i = 1; i <= 100; i++) {
+  console.log('Door %d is %s', i, doors[i - 1] ? 'open' : 'closed');
+}
+
+// EXPECT
+
+[
+  {
+    loc: {
+      end: {
+        column: 19,
+        line: 4,
+      },
+      start: {
+        column: 2,
+        line: 4,
+      },
+    },
+    name: 'Type unknown is not match boolean',
+  },
+  {
+    loc: {
+      end: {
+        column: 27,
+        line: 9,
+      },
+      start: {
+        column: 4,
+        line: 9,
+      },
+    },
+    name: 'Type unknown is not match boolean',
+  },
+];

@@ -1,5 +1,9 @@
 const UNKNOWN_TYPE = 'unknown';
 
+const ATOM_TYPE = {
+  BOOLEAN: "boolean"
+}
+
 
 const DEFINED_HIGH_ORDER_TYPES = {
   ARRAY: "Array",
@@ -27,11 +31,13 @@ const NODE_TYPE = {
   FUNCTION_EXPRESSION: 'FunctionExpression',
   BLOCK_STATEMENT: 'BlockStatement',
   ARRAY_EXPRESSION: 'ArrayExpression',
+  UNARY_EXPRESSION: "UnaryExpression",
 };
 
 module.exports = {
   UNKNOWN_TYPE,
   TYPE_KIND,
   NODE_TYPE,
+  ATOM_TYPE,
   DEFINED_HIGH_ORDER_TYPES,
 };

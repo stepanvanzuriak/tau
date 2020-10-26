@@ -1,11 +1,12 @@
 const get = require('lodash.get');
 
-const { getAtomType, getArrayType } = require('./utils');
+const { getAtomType, getArrayType, buildAtomType } = require('./utils');
 const {
   UNKNOWN_TYPE,
   TYPE_KIND,
   NODE_TYPE,
   DEFINED_HIGH_ORDER_TYPES,
+  ATOM_TYPE,
 } = require('./constants');
 const { TypeOfReturnWrong } = require('./errors-formatter');
 
@@ -63,7 +64,7 @@ function annotationMatcher(left, right) {
     default: {
       const leftAnnotation = annotationPrepare(left);
       const rightAnnotation = annotationPrepare(right);
-     
+
       return {
         match: leftAnnotation === rightAnnotation,
         left: leftAnnotation,
@@ -81,12 +82,18 @@ function ExpressionStatementTypeSwitch(node, state) {
     case NODE_TYPE.LITERAL:
       return getAtomType(node.value);
 
-    case NODE_TYPE.MEMBER_EXPRESSION:
+    case NODE_TYPE.MEMBER_EXPRESSION: {
       const [id, ...path] = getRecursiveObjectPath(node);
 
-      if (state.TypeMap.get(id)) {
+      const type = state.TypeMap.get(id);
+
+      if (type) {
+        if (type.annotation === DEFINED_HIGH_ORDER_TYPES.ARRAY) {
+          return type.arguments[0];
+        }
+
         const result = get(
-          state.TypeMap.get(id),
+          type,
           path.reduce((acc, el) => [...acc, 'annotation', el], []),
         );
 
@@ -98,12 +105,24 @@ function ExpressionStatementTypeSwitch(node, state) {
       }
 
       return UNKNOWN_TYPE;
+    }
 
     case NODE_TYPE.CALL_EXPRESSION:
       return ExpressionStatementTypeSwitch(node.callee, state);
 
-    case NODE_TYPE.ARRAY_EXPRESSION:
+    case NODE_TYPE.ARRAY_EXPRESSION: {
+      const type = state.TypeMap.get(node.name);
+
+      if (type) {
+        return type;
+      }
+
       return getArrayType(node);
+    }
+
+    case NODE_TYPE.UNARY_EXPRESSION: {
+      return buildAtomType(ATOM_TYPE.BOOLEAN);
+    }
 
     default:
       return UNKNOWN_TYPE;

@@ -19,9 +19,7 @@ module.exports = function plugin(Parser) {
   class TauPlugin extends Parser {
     finishNode(node, type) {
 
-      // Auto define type for variables
-      // Example: let a = 12 // <- node.$Type = {name: number, isAtom: true}
-      if (type === NODE_TYPE.VARIABLE_DECLARATOR) {
+      if (type === NODE_TYPE.VARIABLE_DECLARATOR && node.init && node.init.type) {
         switch (node.init.type) {
           case NODE_TYPE.LITERAL: {
             node.$Type = getAtomType(node.init.value);
