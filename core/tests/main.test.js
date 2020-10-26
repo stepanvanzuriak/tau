@@ -3,19 +3,33 @@ const path = require('path');
 const { TauParser, TauValidator } = require('../index.js');
 
 const base = path.resolve(__dirname, './inputs');
-const tests = fs.readdirSync(base);
+const rosettaCodeTestBase = path.resolve(__dirname, './inputs/rosettacode');
+const baseTests = fs.readdirSync(base).filter((el) => el.endsWith('.js'));
+const rosettaCodeTest = fs.readdirSync(rosettaCodeTestBase);
 
-tests
+baseTests.forEach((testName) => {
+  test(testName, () => {
+    const content = fs.readFileSync(path.join(base, testName), 'utf8');
 
-  
-  .forEach((testName) => {
-    test(testName, () => {
-      const content = fs.readFileSync(path.join(base, testName), 'utf8');
+    const [value, match] = content.split('// EXPECT');
 
-      const [value, match] = content.split('// EXPECT');
-
-      expect(TauValidator(TauParser(value))).toMatchObject(
-        eval(match.replace(/\s+/g, ' ').trim()),
-      );
-    });
+    expect(TauValidator(TauParser(value))).toMatchObject(
+      eval(match.replace(/\s+/g, ' ').trim()),
+    );
   });
+});
+
+rosettaCodeTest.forEach((testName) => {
+  test(testName, () => {
+    const content = fs.readFileSync(
+      path.join(rosettaCodeTestBase, testName),
+      'utf8',
+    );
+
+    const [value, match] = content.split('// EXPECT');
+
+    expect(TauValidator(TauParser(value))).toMatchObject(
+      eval(match.replace(/\s+/g, ' ').trim()),
+    );
+  });
+});

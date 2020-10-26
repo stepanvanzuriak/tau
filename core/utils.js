@@ -61,7 +61,7 @@ function getArrayType(node) {
   );
 
   return {
-    arguments: args,
+    arguments: args.length ? args : [{annotation: UNKNOWN_TYPE}],
     annotation:
       args.length > 1
         ? DEFINED_HIGH_ORDER_TYPES.MIXED_ARRAY
@@ -180,4 +180,5 @@ module.exports = {
   getArrayType,
   isAtomType,
   TypeMap,
+  buildAtomType,
 };

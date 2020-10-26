@@ -1,7 +1,12 @@
 const walk = require('acorn-walk');
 
 const { getAtomType, TypeMap } = require('./utils');
-const { UNKNOWN_TYPE, TYPE_KIND, NODE_TYPE } = require('./constants');
+const {
+  UNKNOWN_TYPE,
+  TYPE_KIND,
+  NODE_TYPE,
+  DEFINED_HIGH_ORDER_TYPES,
+} = require('./constants');
 const {
   TypeDoubleDeclarationError,
   TypesNotMatch,
@@ -29,6 +34,7 @@ function TauValidator(ast) {
 
     ReturnStatement(node, state) {
       const definedReturnedType = state.TypeMap.get(state.currentFunction);
+
       const realReturnType = ExpressionStatementTypeSwitch(
         node.argument,
         state,
@@ -96,30 +102,36 @@ function TauValidator(ast) {
       const typeAlias = node.alias.name;
       const typeAnnotation = node.$Type.annotation;
 
-      if (
-        node.$Type.type === TYPE_KIND.ATOM_TYPE ||
-        node.$Type.type === TYPE_KIND.REFERENCE_TYPE
-      ) {
-        if (state.TypeMap.hasScope(typeAlias)) {
-          errors.push(
-            TypeDoubleDeclarationError(
-              state.TypeMap.get(typeAlias).annotation,
-              typeAnnotation,
-              node.loc,
-            ),
-          );
-        } else if (node.$Type.isAtom) {
-          state.TypeMap.set(typeAlias, node.$Type);
-        } else if (node.$Type.isRef && state.TypeMap.has(typeAnnotation)) {
-          state.TypeMap.set(typeAlias, state.TypeMap.get(typeAnnotation));
-        } else {
-          errors.push(TypeRefNotFound(typeAnnotation, node.loc));
+      switch (node.$Type.type) {
+        case TYPE_KIND.ATOM_TYPE:
+        case TYPE_KIND.REFERENCE_TYPE: {
+          if (state.TypeMap.hasScope(typeAlias)) {
+            errors.push(
+              TypeDoubleDeclarationError(
+                state.TypeMap.get(typeAlias).annotation,
+                typeAnnotation,
+                node.loc,
+              ),
+            );
+          } else if (node.$Type.isAtom) {
+            state.TypeMap.set(typeAlias, node.$Type);
+          } else if (node.$Type.isRef && state.TypeMap.has(typeAnnotation)) {
+            state.TypeMap.set(typeAlias, state.TypeMap.get(typeAnnotation));
+          } else {
+            errors.push(TypeRefNotFound(typeAnnotation, node.loc));
+          }
+
+          break;
         }
-      } else if (
-        node.$Type.type === TYPE_KIND.FUNCTION_TYPE ||
-        node.$Type.type === TYPE_KIND.OBJECT_TYPE
-      ) {
-        state.TypeMap.set(typeAlias, node.$Type);
+
+        case TYPE_KIND.FUNCTION_TYPE:
+        case TYPE_KIND.OBJECT_TYPE:
+        case TYPE_KIND.HIGH_ORDER_TYPE:
+          state.TypeMap.set(typeAlias, node.$Type);
+          break;
+
+        default:
+          break;
       }
     },
 
@@ -129,17 +141,20 @@ function TauValidator(ast) {
       // Left and right nodes: Node -> expression -> left / right
       const { left, right } = node.expression;
 
-      const leftType = ExpressionStatementTypeSwitch(left, state);
-      const rightType = ExpressionStatementTypeSwitch(right, state);
+      // TODO: CASE FOR GLOBALS LIKE window.console
+      if (left && right) {
+        const leftType = ExpressionStatementTypeSwitch(left, state);
+        const rightType = ExpressionStatementTypeSwitch(right, state);
 
-      const {
-        left: leftAnnotation,
-        right: rightAnnotation,
-        match,
-      } = annotationMatcher(leftType, rightType);
+        const {
+          left: leftAnnotation,
+          right: rightAnnotation,
+          match,
+        } = annotationMatcher(leftType, rightType);
 
-      if (!match) {
-        errors.push(TypesNotMatch(leftAnnotation, rightAnnotation, node.loc));
+        if (!match) {
+          errors.push(TypesNotMatch(leftAnnotation, rightAnnotation, node.loc));
+        }
       }
     },
 
