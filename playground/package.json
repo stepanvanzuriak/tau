@@ -24,6 +24,7 @@
     "query-string": "^6.13.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "react-modal": "^3.11.2",
     "tau-core": "workspace:core"
   },
   "devDependencies": {
