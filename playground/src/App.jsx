@@ -2,15 +2,33 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { TauParser, TauValidator } from 'tau-core';
 import * as monaco from 'monaco-editor';
 import queryString from 'query-string';
+import Modal from 'react-modal';
+
+import { DEFAULT_CODE } from './constants';
+import BugsSection from './components/BugsSection/index.jsx';
+import Ast from './components/Ast/index.jsx';
 
 import styles from './App.modules.css';
 
+Modal.setAppElement('#root');
+
+const customStyles = {
+  content: {
+    top: '20%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    textAlign: 'center',
+  },
+};
+
 const App = () => {
-  const [playgroundValue, setPlaygroundValue] = useState(
-    "let a = 12;\na = 'wrong!';",
-  );
+  const [playgroundValue, setPlaygroundValue] = useState(DEFAULT_CODE);
 
   const [editor, setEditor] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const [showTrace, setShowTrace] = useState(false);
   const [parserTree, setParserTree] = useState({});
   const [showParserTree, setShowParserTree] = useState(false);
@@ -43,9 +61,13 @@ const App = () => {
     }
   }, [editor, playgroundValue]);
 
+  const closeModal = useCallback(() => {
+    setShowModal(false);
+  }, []);
+
   const onShowParserTree = useCallback(() => {
     setShowParserTree((prev) => !prev);
-  });
+  }, []);
 
   const onShowMore = useCallback(() => {
     setShowTrace((prev) => !prev);
@@ -55,17 +77,18 @@ const App = () => {
     await navigator.clipboard.writeText(
       `${window.location.origin}?share=${btoa(playgroundValue)}`,
     );
-    alert('Link copied to clickboard');
+    setShowModal(true);
   }, [playgroundValue]);
 
   const onSaveAst = useCallback(async () => {
     await navigator.clipboard.writeText(JSON.stringify(parserTree));
-    alert('Link copied to clickboard');
+
+    setShowModal(true);
   }, [parserTree]);
 
   useEffect(() => {
     const parsed = queryString.parse(window.location.search);
-    let value = "let a = 12;\na = 'wrong!';";
+    let value = DEFAULT_CODE;
 
     monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: true,
@@ -80,6 +103,7 @@ const App = () => {
     const edt = monaco.editor.create(document.getElementById('editor'), {
       value,
       language: 'javascript',
+      theme: 'vs-dark',
     });
 
     edt.onDidChangeModelContent(() => {
@@ -93,54 +117,47 @@ const App = () => {
   return (
     <>
       <div className="playground-header">
-        <h2>Tau Playground</h2>
-        {bugs.simple && (
-          <div className="bug-section">
-            <h2>
-              Looks like you found bug in Tau! Help us and submit it{' '}
-              <a href="https://github.com/stepanvanzuriak/tau">here</a>
-              <br />
-              Please share this link:{' '}
-              <a
-                href={`${window.location.origin}?share=${btoa(
-                  playgroundValue,
-                )}`}
-              >
-                {`${window.location.origin}?share=${btoa(playgroundValue)}`}
-              </a>
-            </h2>
-            <code className="bugs">{bugs.simple}</code>
+        <h1>Tau Playground</h1>
+        <BugsSection
+          playgroundValue={playgroundValue}
+          showTrace={showTrace}
+          onShowMore={onShowMore}
+          {...bugs}
+        />
 
-            <button type="button" className="collapsible" onClick={onShowMore}>
-              {showTrace ? <>Less</> : <>More</>}
-            </button>
-            <div className={showTrace ? 'content-visible' : 'content'}>
-              <pre>{bugs.full}</pre>
-            </div>
-          </div>
-        )}
-
-        <button onClick={onValidate}>Validate</button>
+        <button onClick={onValidate}>✔️ Validate</button>
 
         <button className={styles['button-control']} onClick={onShowParserTree}>
-          {showParserTree ? <>Hide</> : <>Show</>} AST
+          📄 {showParserTree ? <>Hide</> : <>Show</>} AST
         </button>
 
         <button className={styles['button-control']} onClick={onShareClick}>
-          Share
+          🔗 Share
         </button>
 
         {showParserTree && (
-          <>
-            <pre className={styles.ast}>
-              {JSON.stringify(parserTree, null, 4)}
-            </pre>
-            <button onClick={onSaveAst}>Copy</button>
-          </>
+          <Ast
+            className={styles.ast}
+            parserTree={parserTree}
+            onSaveAst={onSaveAst}
+          />
         )}
       </div>
 
       <div id="editor"></div>
+
+      <Modal
+        isOpen={showModal}
+        className={styles.modal}
+        overlayClassName={styles.overlay}
+        contentLabel="Example Modal"
+        style={customStyles}
+      >
+        <div>Copied to clipboard!</div>
+        <button className={styles.modalClose} onClick={closeModal}>
+          Close
+        </button>
+      </Modal>
     </>
   );
 };

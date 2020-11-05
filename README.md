@@ -2,8 +2,6 @@
 
 Experimental static type checker
 
-Playground: https://tau-playground.netlify.app/
-
 ## Todo
 
 - [ ] Generic types support

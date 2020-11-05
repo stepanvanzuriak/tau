@@ -4,10 +4,32 @@
 
 .ast {
   overflow: auto;
-  max-width: 500px;
+ 
   max-height: 300px;
   display: block;
   margin-top: 10px;
   font-size: 0.8rem;
   line-height: 1.2;
+}
+
+.modal {
+  background: var(--background-body);
+  position: absolute;
+  top: 40px;
+  left: 40px;
+  right: 40px;
+  bottom: 40px;
+  padding: 20px;
+  border-radius: 6px;
+  width: 200px;
+  height: fit-content;
+  border: 2px solid var(--focus);
+}
+
+.overlay {
+  background-color: var(--background-body);
+}
+
+.modalClose {
+  margin-top: 10px;
 }
