@@ -75,7 +75,7 @@ module.exports = {
       filename: './index.html',
     }),
     new MonacoWebpackPlugin({
-      publicPath: '/static',
+      publicPath: '/',
       languages: ['typescript', 'javascript'],
     }),
   ],
