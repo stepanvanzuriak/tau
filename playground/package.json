@@ -24,6 +24,7 @@
     "query-string": "^6.13.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
+    "react-modal": "^3.11.2",
     "tau-core": "workspace:core"
   },
   "devDependencies": {
@@ -38,7 +39,7 @@
     "file-loader": "^6.0.0",
     "html-loader": "^1.1.0",
     "html-webpack-plugin": "^4.3.0",
-    "monaco-editor-webpack-plugin": "^1.9.0",
+    "monaco-editor-webpack-plugin": "^2.0.0",
     "pnp-webpack-plugin": "^1.6.4",
     "style-loader": "^1.2.1",
     "webpack": "^4.43.0",
