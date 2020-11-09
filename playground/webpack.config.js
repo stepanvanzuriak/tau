@@ -76,7 +76,7 @@ module.exports = {
     }),
     new MonacoWebpackPlugin({
       publicPath: '/',
-      languages: ['typescript', 'javascript'],
+      languages: ['javascript'],
     }),
   ],
 };
