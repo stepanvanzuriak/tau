@@ -18,8 +18,11 @@ tt._type = new acorn.TokenType('type', { keyword: 'type' });
 module.exports = function plugin(Parser) {
   class TauPlugin extends Parser {
     finishNode(node, type) {
-
-      if (type === NODE_TYPE.VARIABLE_DECLARATOR && node.init && node.init.type) {
+      if (
+        type === NODE_TYPE.VARIABLE_DECLARATOR &&
+        node.init &&
+        node.init.type
+      ) {
         switch (node.init.type) {
           case NODE_TYPE.LITERAL: {
             node.$Type = getAtomType(node.init.value);
@@ -159,8 +162,8 @@ module.exports = function plugin(Parser) {
         type: TYPE_KIND.HIGH_ORDER_TYPE,
         isRef: false,
         isAtom: false,
-        annotation: typeBase.annotation
-      }
+        annotation: typeBase.annotation,
+      };
 
       const params = [];
 
@@ -200,11 +203,10 @@ module.exports = function plugin(Parser) {
         // 2d: If type is High order type
         // Example: type a = Array(number);
         if (this.type === tt.parenL) {
-          result = this._parseHighOrderType(result)
+          result = this._parseHighOrderType(result);
         }
       }
 
-     
       return result;
     }
 

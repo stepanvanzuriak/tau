@@ -13,7 +13,7 @@ baseTests.forEach((testName) => {
 
     const [value, match] = content.split('// EXPECT');
 
-    expect(TauValidator(TauParser(value))).toMatchObject(
+    expect(TauValidator(TauParser(value)).errors).toMatchObject(
       eval(match.replace(/\s+/g, ' ').trim()),
     );
   });
@@ -28,7 +28,7 @@ rosettaCodeTest.forEach((testName) => {
 
     const [value, match] = content.split('// EXPECT');
 
-    expect(TauValidator(TauParser(value))).toMatchObject(
+    expect(TauValidator(TauParser(value)).errors).toMatchObject(
       eval(match.replace(/\s+/g, ' ').trim()),
     );
   });
