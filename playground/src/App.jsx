@@ -41,7 +41,7 @@ const App = () => {
       try {
         const ast = TauParser(playgroundValue);
         setParserTree(ast);
-        warnings = TauValidator(ast);
+        warnings = TauValidator(ast).errors;
       } catch (e) {
         setBugs({ simple: e.toString(), full: e.stack });
       }

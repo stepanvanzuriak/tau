@@ -1,4 +1,5 @@
 const walk = require('acorn-walk');
+const buildIn = require('./typing/snapshots/build-in.tau.snapshot');
 
 const { getAtomType, TypeMap } = require('./utils');
 const {
@@ -22,8 +23,13 @@ const {
   AutoTypeSetter,
 } = require('./tau-validator-utils.js');
 
-function TauValidator(ast) {
+function TauValidator(ast, definedTypeMap) {
+  if (!definedTypeMap && buildIn && buildIn.types && buildIn.types.typeMap) {
+    definedTypeMap = buildIn.types.typeMap;
+  }
+
   const errors = [];
+  let typeMap;
 
   walk.recursive(ast, [], {
     BlockStatement(node, state, c) {
@@ -222,14 +228,15 @@ function TauValidator(ast) {
     },
 
     Program(node, state, c) {
-      state.TypeMap = new TypeMap();
+      state.TypeMap = new TypeMap(definedTypeMap);
+      typeMap = state.TypeMap;
       node.body.forEach((child) => {
         c(child, state);
       });
     },
   });
 
-  return errors;
+  return { errors, typeMap };
 }
 
 module.exports = TauValidator;

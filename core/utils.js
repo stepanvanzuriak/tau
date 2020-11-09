@@ -61,7 +61,7 @@ function getArrayType(node) {
   );
 
   return {
-    arguments: args.length ? args : [{annotation: UNKNOWN_TYPE}],
+    arguments: args.length ? args : [{ annotation: UNKNOWN_TYPE }],
     annotation:
       args.length > 1
         ? DEFINED_HIGH_ORDER_TYPES.MIXED_ARRAY
@@ -130,9 +130,36 @@ function getFunctionType(node) {
   };
 }
 
+function fromJson(scopes) {
+  return scopes.map((scope) => {
+    const strMap = new Map();
+
+    for (let k of Object.keys(scope)) {
+      strMap.set(k, scope[k]);
+    }
+
+    return strMap;
+  });
+}
+
 class TypeMap {
-  constructor() {
-    this.scopes = [new Map()];
+  constructor(definedTypeMap) {
+    if (definedTypeMap) {
+      this.scopes = fromJson(definedTypeMap);
+    } else {
+      this.scopes = [new Map()];
+    }
+  }
+
+  toJSON() {
+    return this.scopes.map((scope) => {
+      const obj = {};
+      for (let [k, v] of scope) {
+        obj[k] = v;
+      }
+
+      return obj;
+    });
   }
 
   lastScope() {
