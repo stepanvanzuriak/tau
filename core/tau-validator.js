@@ -171,7 +171,6 @@ function TauValidator(ast) {
         if (state.TypeMap.hasScope(dec.id.name)) {
           const stateType = state.TypeMap.get(dec.id.name);
 
-          // WARNING: LOOKS LIKE BUG BECAUSE NOT SET HERE (FULL IF)
           if (dec.$Type) {
             if (dec.$Type.isAtom) {
               if (stateType.annotation !== dec.$Type.annotation) {

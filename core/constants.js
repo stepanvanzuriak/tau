@@ -32,6 +32,7 @@ const NODE_TYPE = {
   BLOCK_STATEMENT: 'BlockStatement',
   ARRAY_EXPRESSION: 'ArrayExpression',
   UNARY_EXPRESSION: "UnaryExpression",
+  BINARY_EXPRESSION: "BinaryExpression"
 };
 
 module.exports = {

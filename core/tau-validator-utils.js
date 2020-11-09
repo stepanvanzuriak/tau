@@ -148,12 +148,20 @@ function OtherTypeMatcher(dec, stateType, errors) {
 }
 
 function AutoTypeSetter(dec, state) {
-  // TODO: Convert to switch
-  let autoType;
+  switch (dec.init.type) {
+    case NODE_TYPE.CALL_EXPRESSION: {
+      const autoType = state.TypeMap.get(dec.init.callee.name).result;
+      state.TypeMap.set(dec.id.name, autoType);
+    }
+    case NODE_TYPE.BINARY_EXPRESSION: {
+      const leftType = ExpressionStatementTypeSwitch(dec.init.left, state);
 
-  if (dec.init.type === NODE_TYPE.CALL_EXPRESSION) {
-    autoType = state.TypeMap.get(dec.init.callee.name).result;
-    state.TypeMap.set(dec.id.name, autoType);
+      const rightType = ExpressionStatementTypeSwitch(dec.init.right, state);
+
+      if (annotationMatcher(leftType, rightType)) {
+        state.TypeMap.set(dec.id.name, leftType);
+      }
+    }
   }
 }
 
