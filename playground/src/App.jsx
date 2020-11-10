@@ -75,7 +75,9 @@ const App = () => {
 
   const onShareClick = useCallback(async () => {
     await navigator.clipboard.writeText(
-      `${window.location.origin}?share=${btoa(playgroundValue)}`,
+      `${window.location.origin}?share=${encodeURIComponent(
+        btoa(playgroundValue),
+      )}`,
     );
     setShowModal(true);
   }, [playgroundValue]);
