@@ -109,6 +109,50 @@ module.exports = function plugin(Parser) {
       return result;
     }
 
+    _parseObjectFunction() {
+      // 1: Define node
+      const result = {
+        type: TYPE_KIND.FUNCTION_TYPE,
+        isRef: false,
+        isAtom: false,
+      };
+      const params = [];
+      let withResult = true;
+
+      while (!this.eat(tt.arrow)) {
+        // Break the look if function defined without result type
+        // Example: type f = (number, number);
+
+        if (this.type === tt.parenR) {
+          this.nextToken();
+
+          if (this.type !== tt.arrow) {
+            withResult = false;
+          } else {
+            this.eat(tt.arrow);
+          }
+
+          break;
+        }
+
+        if (this.type === tt.name) {
+          params.push(this._fromIdentToType());
+        } else {
+          this.nextToken();
+        }
+      }
+
+      // 3: Define arguments as node property
+      result.arguments = params;
+
+      // 4: Define result type as node property
+      if (withResult) {
+        result.result = this._fromIdentToType();
+      }
+
+      return result;
+    }
+
     _parseObjectType() {
       // 1: Define node
       const result = {
@@ -124,6 +168,10 @@ module.exports = function plugin(Parser) {
       const types = [];
 
       while (!this.eat(tt.braceR)) {
+        if (this.type === tt.semi) {
+          break;
+        }
+
         if (!isOpenParam) {
           if (this.type === tt.name) {
             const ident = this.parseIdent();
@@ -137,8 +185,13 @@ module.exports = function plugin(Parser) {
           this.expect(tt.colon);
 
           if (this.type === tt.name) {
-            const type = this._fromIdentToType();
+            types.push(this._fromIdentToType());
+            isOpenParam = false;
+          } else if (this.type === tt.parenL) {
+            const type = this._parseObjectFunction();
+
             types.push(type);
+
             isOpenParam = false;
           } else {
             this.nextToken();

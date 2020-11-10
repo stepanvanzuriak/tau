@@ -89,7 +89,7 @@ function getObjectType(node) {
           break;
         }
         case NODE_TYPE.ARROW_FUNCTION_EXPRESSION: {
-          acc[prop.key.name] = getArrowFunctionType(prop.value);
+          acc[prop.key.name] = getFunctionType(prop.value);
           break;
         }
       }

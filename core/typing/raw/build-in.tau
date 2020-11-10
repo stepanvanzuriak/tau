@@ -1,6 +1,4 @@
 type Boolean = (unknown) => boolean;
 type Number = (unknown) => number;
 type String = (unknown) => string;
-type nothingFunc = (unknown);
-type consoleAssert = (boolean, unknown);
-type console = {log: nothingFunc, assert: consoleAssert};
+type console = {log: (unknown), assert: (boolean, unknown)};
