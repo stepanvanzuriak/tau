@@ -220,9 +220,9 @@ function TauValidator(ast, definedTypeMap) {
             state.TypeMap.set(dec.id.name, dec.$Type);
           }
         } else {
-          c(dec.init, state);
-
           AutoTypeSetter(dec, state);
+
+          c(dec.init, state);
         }
       }
     },
