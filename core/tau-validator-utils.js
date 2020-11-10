@@ -152,6 +152,7 @@ function AutoTypeSetter(dec, state) {
     case NODE_TYPE.CALL_EXPRESSION: {
       const autoType = state.TypeMap.get(dec.init.callee.name).result;
       state.TypeMap.set(dec.id.name, autoType);
+      break;
     }
     case NODE_TYPE.BINARY_EXPRESSION: {
       const leftType = ExpressionStatementTypeSwitch(dec.init.left, state);
@@ -161,6 +162,7 @@ function AutoTypeSetter(dec, state) {
       if (annotationMatcher(leftType, rightType)) {
         state.TypeMap.set(dec.id.name, leftType);
       }
+      break;
     }
   }
 }
