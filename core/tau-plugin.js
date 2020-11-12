@@ -273,7 +273,10 @@ module.exports = function plugin(Parser) {
 
       // 5: Define end of type
       this.semicolon();
-      return this.finishNode(node, NODE_TYPE.TYPE_DEFINITION);
+
+      const result = this.finishNode(node, NODE_TYPE.TYPE_DEFINITION);
+
+      return result;
     }
 
     _parseType(node, expr) {

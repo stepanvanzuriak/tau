@@ -203,6 +203,15 @@ class TypeMap {
   }
 }
 
+function debugLog(isDebug, globalLabel, label, ...values) {
+  if (isDebug) {
+    console.group(globalLabel);
+    console.info(label);
+    values.map((value) => console.log(value));
+    console.groupEnd();
+  }
+}
+
 module.exports = {
   getAtomType,
   getObjectType,
@@ -212,4 +221,5 @@ module.exports = {
   isAtomType,
   TypeMap,
   buildAtomType,
+  debugLog,
 };

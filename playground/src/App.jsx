@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { TauParser, TauValidator } from 'tau-core';
+import { TauParser, TauValidator, TauParserObject } from 'tau-core';
 import * as monaco from 'monaco-editor';
 import queryString from 'query-string';
 import Modal from 'react-modal';
@@ -41,7 +41,7 @@ const App = () => {
       try {
         const ast = TauParser(playgroundValue);
         setParserTree(ast);
-        warnings = TauValidator(ast).errors;
+        warnings = TauValidator(ast, null, true).errors;
       } catch (e) {
         setBugs({ simple: e.toString(), full: e.stack });
       }
