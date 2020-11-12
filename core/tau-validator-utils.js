@@ -52,8 +52,12 @@ function annotationPrepare(node) {
 function annotationMatcher(left, right) {
   switch (right.type) {
     case TYPE_KIND.ARROW_FUNCTION_TYPE: {
+      const rightResultPath = Array.from({ length: right.callsCount })
+        .fill('annotation.result')
+        .join('.');
+
       const leftAnnotation = annotationPrepare(left);
-      const rightAnnotation = annotationPrepare(right.annotation.result);
+      const rightAnnotation = annotationPrepare(get(right, rightResultPath));
       return {
         match: leftAnnotation === rightAnnotation,
         left: leftAnnotation,
@@ -74,10 +78,15 @@ function annotationMatcher(left, right) {
   }
 }
 
-function ExpressionStatementTypeSwitch(node, state) {
+function ExpressionStatementTypeSwitch(node, state, callsCount = 0) {
   switch (node.type) {
-    case NODE_TYPE.IDENTIFIER:
-      return state.TypeMap.get(node.name);
+    case NODE_TYPE.IDENTIFIER: {
+      const result = state.TypeMap.get(node.name);
+      if (callsCount) {
+        result.callsCount = callsCount;
+      }
+      return result;
+    }
 
     case NODE_TYPE.LITERAL:
       return getAtomType(node.value);
@@ -108,7 +117,7 @@ function ExpressionStatementTypeSwitch(node, state) {
     }
 
     case NODE_TYPE.CALL_EXPRESSION:
-      return ExpressionStatementTypeSwitch(node.callee, state);
+      return ExpressionStatementTypeSwitch(node.callee, state, callsCount + 1);
 
     case NODE_TYPE.ARRAY_EXPRESSION: {
       const type = state.TypeMap.get(node.name);
@@ -132,7 +141,6 @@ function ExpressionStatementTypeSwitch(node, state) {
 function OtherTypeMatcher(dec, stateType, errors) {
   // TODO: Convert to switch
 
-  console.log(dec)
   if (dec.$Type.type === TYPE_KIND.ARROW_FUNCTION_TYPE) {
     const result = dec.$Type.annotation.result;
     if (result.isAtom) {
