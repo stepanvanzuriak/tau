@@ -120,6 +120,10 @@ function getFunctionType(node) {
       annotation.result = getResultFromBlock(node.body);
       break;
     }
+    case NODE_TYPE.ARROW_FUNCTION_EXPRESSION: {
+      annotation.result = getFunctionType(node.body);
+      break;
+    }
   }
 
   return {

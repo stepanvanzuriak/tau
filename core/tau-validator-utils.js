@@ -131,6 +131,8 @@ function ExpressionStatementTypeSwitch(node, state) {
 
 function OtherTypeMatcher(dec, stateType, errors) {
   // TODO: Convert to switch
+
+  console.log(dec)
   if (dec.$Type.type === TYPE_KIND.ARROW_FUNCTION_TYPE) {
     const result = dec.$Type.annotation.result;
     if (result.isAtom) {

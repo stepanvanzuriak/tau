@@ -68,7 +68,6 @@ module.exports = function plugin(Parser) {
     }
 
     _parseFunctionType() {
-      // 1: Define node
       const result = {
         type: TYPE_KIND.FUNCTION_TYPE,
         isRef: false,
@@ -77,12 +76,7 @@ module.exports = function plugin(Parser) {
       const params = [];
       let withResult = true;
 
-      // 2: Push function arguments to list
-      // Example (number, boolean) => string // [number, boolean]
       while (!this.eat(tt.arrow)) {
-        // Break the look if function defined without result type
-        // Example: type f = (number, number);
-
         if (this.type === tt.semi) {
           withResult = false;
           break;
@@ -95,15 +89,14 @@ module.exports = function plugin(Parser) {
         }
       }
 
-      // 3: Define arguments as node property
       result.arguments = params;
 
-      // 4: Define result type as node property
-      if (withResult) {
+      if (this.type === tt.parenL) {
+        result.result = this._parseFunctionType();
+      } else if (withResult) {
         result.result = this._fromIdentToType();
       }
 
-      // 5: Define end of type
       this.semicolon();
 
       return result;
