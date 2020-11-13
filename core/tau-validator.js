@@ -28,7 +28,7 @@ function TauValidator(ast, definedTypeMap, debug = false) {
 
   walk.recursive(ast, [], {
     BlockStatement(node, state, c) {
-      debugLog(debug, 'Validator', 'BlockStatement', node, state);
+      debugLog(debug, 'BlockStatement', node, state);
 
       node.body.forEach((child) => {
         c(child, state);
@@ -36,7 +36,7 @@ function TauValidator(ast, definedTypeMap, debug = false) {
     },
 
     ReturnStatement(node, state) {
-      debugLog(debug, 'Validator', 'ReturnStatement', node, state);
+      debugLog(debug, 'ReturnStatement', node, state);
       const definedReturnedType = state.TypeMap.get(state.currentFunction);
 
       const realReturnType = ExpressionStatementTypeSwitch(
@@ -55,7 +55,7 @@ function TauValidator(ast, definedTypeMap, debug = false) {
     },
 
     CallExpression(node, state) {
-      debugLog(debug, 'Validator', 'CallExpression', node, state);
+      debugLog(debug, 'CallExpression', node, state);
       const originFunctionType = state.TypeMap.get(node.callee.name);
       const originFunctionArguments = originFunctionType.arguments;
       const realArguments = node.arguments;
@@ -78,7 +78,7 @@ function TauValidator(ast, definedTypeMap, debug = false) {
     },
 
     FunctionDeclaration(node, state, c) {
-      debugLog(debug, 'Validator', 'FunctionDeclaration', node, state);
+      debugLog(debug, 'FunctionDeclaration', node, state);
       state.TypeMap.addScope();
       if (state.TypeMap.has(node.id.name)) {
         const type = state.TypeMap.get(node.id.name);
@@ -105,7 +105,7 @@ function TauValidator(ast, definedTypeMap, debug = false) {
     // Visit function for TypeDefinition
     // Example: type a = boolean;
     TypeDefinition(node, state) {
-      debugLog(debug, 'Validator', 'TypeDefinition', node, state);
+      debugLog(debug, 'TypeDefinition', node, state);
       const typeAlias = node.alias.name;
       const typeAnnotation = node.$Type.annotation;
 
@@ -145,14 +145,22 @@ function TauValidator(ast, definedTypeMap, debug = false) {
     // Visit function for ExpressionStatement
     // Example: num1 = num2;
     ExpressionStatement(node, state) {
-      debugLog(debug, 'Validator', 'ExpressionStatement', node, state);
+      debugLog(debug, 'ExpressionStatement', node, state);
       // Left and right nodes: Node -> expression -> left / right
       const { left, right } = node.expression;
 
-      // TODO: CASE FOR GLOBALS LIKE window.console
       if (left && right) {
         const leftType = ExpressionStatementTypeSwitch(left, state);
         const rightType = ExpressionStatementTypeSwitch(right, state);
+
+        debugLog(
+          debug,
+          'ExpressionStatement: left, right, leftType, rightType',
+          left,
+          right,
+          leftType,
+          rightType,
+        );
 
         const {
           left: leftAnnotation,
@@ -169,7 +177,7 @@ function TauValidator(ast, definedTypeMap, debug = false) {
     // Visit function for Variable declaration
     // Example: let num1 = 12;
     VariableDeclaration(node, state, c) {
-      debugLog(debug, 'Validator', 'VariableDeclaration', node, state);
+      debugLog(debug, 'VariableDeclaration', node, state);
       // Type path: Node -> declarations -> $Type
       // Type to variable name: Node -> declarations -> id -> name
 
