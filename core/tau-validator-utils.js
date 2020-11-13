@@ -52,7 +52,7 @@ function annotationPrepare(node) {
 function annotationMatcher(left, right) {
   switch (right.type) {
     case TYPE_KIND.ARROW_FUNCTION_TYPE: {
-      const rightResultPath = Array.from({ length: right.callsCount })
+      const rightResultPath = Array.from({ length: right.callsCount || 1 })
         .fill('annotation.result')
         .join('.');
 
