@@ -110,6 +110,10 @@ function ExpressionStatementTypeSwitch(node, state, callsCount = 0) {
           return state.TypeMap.get(result.annotation);
         }
 
+        if (callsCount) {
+          return result.result
+        }
+
         return result;
       }
 
@@ -131,6 +135,18 @@ function ExpressionStatementTypeSwitch(node, state, callsCount = 0) {
 
     case NODE_TYPE.UNARY_EXPRESSION: {
       return buildAtomType(ATOM_TYPE.BOOLEAN);
+    }
+
+    case NODE_TYPE.BINARY_EXPRESSION: {
+      const leftType = ExpressionStatementTypeSwitch(node.left, state, callsCount);
+      const rightType = ExpressionStatementTypeSwitch(node.right, state, callsCount);
+
+    
+      if (annotationMatcher(leftType, rightType)) {
+        return leftType;
+      }
+
+      return UNKNOWN_TYPE;
     }
 
     default:
@@ -160,20 +176,38 @@ function OtherTypeMatcher(dec, stateType, errors) {
 function AutoTypeSetter(dec, state) {
   switch (dec.init.type) {
     case NODE_TYPE.CALL_EXPRESSION: {
-      const autoType = state.TypeMap.get(dec.init.callee.name).result;
+      let autoType;
+      const callee = dec.init.callee;
+
+      if (callee.name) {
+        autoType = state.TypeMap.get(callee.name).result;
+      } else if (callee.object && callee.object.name) {
+        autoType = state.TypeMap.get(callee.object.name).annotation[
+          callee.property.name
+        ].result;
+      }
+
       state.TypeMap.set(dec.id.name, autoType);
-      break;
+      return autoType;
     }
     case NODE_TYPE.BINARY_EXPRESSION: {
       const leftType = ExpressionStatementTypeSwitch(dec.init.left, state);
-
       const rightType = ExpressionStatementTypeSwitch(dec.init.right, state);
 
       if (annotationMatcher(leftType, rightType)) {
         state.TypeMap.set(dec.id.name, leftType);
+        return leftType;
       }
-      break;
+
+      return UNKNOWN_TYPE;
     }
+
+    case NODE_TYPE.IDENTIFIER: {
+      return state.TypeMap.get(dec.init.id) || UNKNOWN_TYPE
+    }
+
+
+    return UNKNOWN_TYPE;
   }
 }
 
