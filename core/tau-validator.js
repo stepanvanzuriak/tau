@@ -56,23 +56,24 @@ function TauValidator(ast, definedTypeMap, debug = false) {
 
     CallExpression(node, state) {
       debugLog(debug, 'CallExpression', node, state);
-      const originFunctionType = state.TypeMap.get(node.callee.name);
+
+      const originFunctionType = ExpressionStatementTypeSwitch(
+        node.callee,
+        state,
+      );
       const originFunctionArguments = originFunctionType.arguments;
       const realArguments = node.arguments;
-
+      
       for (let i = 0; i < originFunctionArguments.length; i++) {
         const originType = originFunctionArguments[i];
-        const realType = realArguments[i];
+        const realType = ExpressionStatementTypeSwitch(realArguments[i], state);
+      
+        const { match } = annotationMatcher(originType, realType);
 
-        // TODO: ADD SWITCH
-        if (originType.type === TYPE_KIND.ATOM_TYPE) {
-          const valueType = typeof realType.value;
-
-          if (originType.annotation !== valueType) {
-            errors.push(
-              ArgumentsNotMatch(valueType, originType.annotation, node.loc),
-            );
-          }
+        if (!match) {
+          errors.push(
+            ArgumentsNotMatch(realType.annotation, originType.annotation, node.loc),
+          );
         }
       }
     },
@@ -187,13 +188,17 @@ function TauValidator(ast, definedTypeMap, debug = false) {
 
         if (state.TypeMap.hasScope(dec.id.name)) {
           const stateType = state.TypeMap.get(dec.id.name);
+          debugLog(
+            debug,
+            'VariableDeclaration : TypeMap.hasScope',
+            node,
+            state,
+          );
 
-          if (dec.$Type) {
+          function matcher() {
             if (dec.$Type.isAtom) {
-              if (stateType.annotation !== dec.$Type.annotation) {
-                // type a = string;
-                // let a = 12; // <- Error here
-
+              const { match } = annotationMatcher(stateType, dec.$Type);
+              if (!match) {
                 errors.push(
                   TypesNotMatch(
                     stateType.annotation,
@@ -219,6 +224,12 @@ function TauValidator(ast, definedTypeMap, debug = false) {
               OtherTypeMatcher(dec, stateType, errors);
             }
           }
+
+          if (!dec.$Type) {
+            dec.$Type = AutoTypeSetter(dec, state);
+          }
+
+          matcher();
         } else if (dec.$Type) {
           if (dec.$Type.isAtom) {
             state.TypeMap.set(dec.id.name, dec.$Type);

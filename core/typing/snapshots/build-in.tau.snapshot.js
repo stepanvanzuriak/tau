@@ -96,6 +96,44 @@ module.exports = {types: {
       ]
      }
     }
+   },
+   "Math": {
+    "type": "ObjectType",
+    "isRef": false,
+    "isAtom": false,
+    "annotation": {
+     "random": {
+      "type": "FunctionType",
+      "isRef": false,
+      "isAtom": false,
+      "arguments": [],
+      "result": {
+       "annotation": "number",
+       "isAtom": true,
+       "isRef": false,
+       "type": "AtomType"
+      }
+     },
+     "floor": {
+      "type": "FunctionType",
+      "isRef": false,
+      "isAtom": false,
+      "arguments": [
+       {
+        "annotation": "number",
+        "isAtom": true,
+        "isRef": false,
+        "type": "AtomType"
+       }
+      ],
+      "result": {
+       "annotation": "number",
+       "isAtom": true,
+       "isRef": false,
+       "type": "AtomType"
+      }
+     }
+    }
    }
   }
  ]

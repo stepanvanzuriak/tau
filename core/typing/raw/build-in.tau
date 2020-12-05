@@ -2,3 +2,4 @@ type Boolean = (unknown) => boolean;
 type Number = (unknown) => number;
 type String = (unknown) => string;
 type console = {log: (unknown), assert: (boolean, unknown)};
+type Math = {random: () => number, floor: (number) => number}
