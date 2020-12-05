@@ -1,4 +1,4 @@
-const walk = require('acorn-walk');
+const walk = require('./walk');
 const buildIn = require('./typing/snapshots/build-in.tau.snapshot');
 
 const { TypeMap, debugLog } = require('./utils');
